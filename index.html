@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="CSVの重複行削除と空白整理。ファイルを外部送信しない無料のブラウザツール。UTF-8・Shift_JISに対応。">
+  <meta name="color-scheme" content="light">
+  <title>SheetClean Lite | CSVを、すっきり。</title>
+  <style>
+    :root { color-scheme: light; --ink:#162b3c; --sub:#506679; --line:#dce6ee; --sky:#e9f5fa; --blue:#196a88; --blue-dark:#10516d; --green:#146959; --paper:#fff; --bg:#f5f8fa; --shadow:0 16px 48px rgba(23,54,75,.08); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif; background:var(--bg); color:var(--ink); line-height:1.7; }
+    .wrap { max-width:1050px; margin:auto; padding:0 24px; }
+    header { background:#fff; border-bottom:1px solid var(--line); }
+    header .wrap { display:flex; align-items:center; justify-content:space-between; min-height:70px; gap:16px; }
+    .brand { display:flex; align-items:center; gap:10px; font-size:1.07rem; font-weight:820; letter-spacing:-.035em; }
+    .brand-icon { display:grid; place-items:center; width:34px; height:34px; border-radius:11px; background:var(--blue); color:white; font-size:1.15rem; font-weight:900; }
+    .brand small { background:#eaf4f4; color:var(--green); padding:3px 9px; font-size:.64rem; border-radius:20px; font-weight:700; letter-spacing:0; }
+    .header-note { color:var(--sub); font-size:.81rem; font-weight:620; }
+    .hero { padding:62px 0 38px; background:radial-gradient(ellipse at 90% 0%,#d9eff4 0%, transparent 54%), linear-gradient(180deg,#f8fcfd 0%,#f5f8fa 100%); }
+    .eyebrow { display:inline-block; color:var(--blue); background:#e2f2f6; font-weight:780; font-size:.78rem; padding:5px 12px; border-radius:50px; margin:0 0 16px; }
+    h1 { margin:0 0 14px; font-size:clamp(2.1rem,5vw,3.6rem); line-height:1.26; letter-spacing:-.065em; }
+    h1 em { color:var(--blue); font-style:normal; }
+    .hero p { color:var(--sub); margin:0; font-size:1rem; max-width:620px; }
+    .feature-pills { display:flex; flex-wrap:wrap; gap:9px; margin-top:22px; }
+    .feature-pills span { border:1px solid #cce2e9; background:white; color:var(--blue-dark); border-radius:30px; padding:5px 11px; font-size:.79rem; font-weight:650; }
+    main { padding:0 0 45px; }
+    .app-card { background:var(--paper); box-shadow:var(--shadow); border:1px solid var(--line); border-radius:22px; padding:clamp(20px,3vw,35px); }
+    h2 { margin:0 0 6px; font-size:1.3rem; letter-spacing:-.03em; }
+    .subtitle { margin:0 0 22px; font-size:.91rem; color:var(--sub); }
+    .dropzone { background:#f7fbfc; border:2px dashed #a9cad7; border-radius:17px; padding:30px 18px; text-align:center; transition:background .15s,border-color .15s; }
+    .dropzone.active { background:#e7f5f9; border-color:var(--blue); }
+    .upload-icon { display:grid; place-items:center; margin:0 auto 10px; background:#e4f1f5; color:var(--blue); width:49px; height:49px; border-radius:15px; font-size:1.45rem; }
+    .dropzone strong { display:block; font-size:1.06rem; }
+    .dropzone p { margin:3px 0 13px; color:var(--sub); font-size:.86rem; }
+    .select-file { display:inline-flex; justify-content:center; align-items:center; border:1px solid var(--blue); background:white; color:var(--blue-dark); border-radius:9px; padding:9px 20px; font-weight:760; cursor:pointer; }
+    .select-file:hover { background:#eaf4f7; }
+    .select-file:focus-within { outline:3px solid #92c9dc; outline-offset:2px; }
+    .select-file input { position:absolute; width:1px; height:1px; opacity:0; overflow:hidden; }
+    #fileName { min-height:1.5em; margin-top:10px; color:var(--blue-dark); font-weight:650; overflow-wrap:anywhere; font-size:.84rem; }
+    .controls { display:grid; grid-template-columns:minmax(190px,1fr) 1.35fr; gap:22px; margin-top:24px; padding:20px; border-radius:14px; background:#f7f9fa; }
+    .control-title { display:block; font-size:.81rem; font-weight:760; margin-bottom:9px; }
+    select { width:100%; background:white; color:var(--ink); border:1px solid #b9cdd8; border-radius:10px; padding:11px 12px; font:inherit; font-size:.9rem; }
+    .checks { display:grid; gap:9px; }
+    .check { display:flex; align-items:flex-start; gap:10px; font-size:.88rem; cursor:pointer; }
+    .check input { width:19px; height:19px; margin:3px 0 0; accent-color:var(--blue); flex:none; }
+    .help { display:block; color:var(--sub); font-size:.73rem; line-height:1.55; margin:4px 0 0 29px; }
+    .actions { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin-top:23px; }
+    button { font:inherit; }
+    .primary { background:var(--blue); border:1px solid var(--blue); color:white; border-radius:11px; font-weight:790; padding:12px 22px; cursor:pointer; box-shadow:0 6px 18px rgba(25,106,136,.13); }
+    .primary:hover:not(:disabled) { background:var(--blue-dark); }
+    .primary:disabled { background:#adc1cc; border-color:#adc1cc; color:#f8fbfc; cursor:not-allowed; box-shadow:none; }
+    .quiet { background:white; border:1px solid #b7ced8; border-radius:11px; padding:12px 18px; color:var(--blue-dark); font-weight:720; cursor:pointer; }
+    .quiet:disabled { color:#a1b0b8; cursor:not-allowed; }
+    :is(button,select,input):focus-visible { outline:3px solid #90c9dc; outline-offset:3px; }
+    #status { color:var(--sub); font-size:.84rem; margin:0; flex:1 1 200px; min-width:0; }
+    #status.error { color:#a73b37; font-weight:720; }
+    #results { margin-top:23px; border-top:1px solid var(--line); padding-top:20px; }
+    [hidden] { display:none !important; }
+    .stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+    .stat { background:var(--sky); border-radius:12px; padding:14px; }
+    .stat span { display:block; font-size:.75rem; color:var(--sub); }
+    .stat strong { display:block; font-size:1.55rem; line-height:1.3; font-variant-numeric:tabular-nums; }
+    .preview-title { margin:20px 0 9px; font-size:.92rem; font-weight:760; }
+    .preview-scroll { overflow:auto; border:1px solid var(--line); border-radius:12px; max-height:320px; }
+    table { width:100%; min-width:320px; border-collapse:collapse; text-align:left; font-size:.85rem; }
+    th,td { padding:9px 12px; border-bottom:1px solid var(--line); white-space:pre-wrap; overflow-wrap:anywhere; max-width:330px; }
+    th { background:#edf4f7; color:var(--ink); position:sticky; top:0; }
+    tbody tr:last-child td { border-bottom:0; }
+    .result-note { margin:9px 0 0; color:var(--sub); font-size:.76rem; }
+    .privacy { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:22px; }
+    .info { padding:19px 20px; border:1px solid var(--line); border-radius:15px; background:#fff; }
+    .info h3 { font-size:.94rem; margin:0 0 8px; }
+    .info p { margin:0; color:var(--sub); font-size:.82rem; }
+    footer { text-align:center; color:var(--sub); font-size:.75rem; padding:24px 18px 40px; }
+    footer p { margin:4px 0; }
+    @media(max-width:680px) { .wrap { padding:0 15px; } header .wrap { min-height:62px; } .header-note { display:none; } .hero { padding:38px 0 27px; } .controls,.privacy { grid-template-columns:1fr; gap:16px; } .controls { padding:15px; } .app-card { border-radius:16px; } .actions { align-items:stretch; } .actions button { flex:1; } .stats { gap:7px; } .stat { padding:11px; } .stat strong { font-size:1.3rem; } }
+    @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
+  </style>
+</head>
+<body>
+  <header><div class="wrap"><div class="brand"><div class="brand-icon" aria-hidden="true">≋</div>SheetClean <small>LITE</small></div><div class="header-note">登録不要・無料・ブラウザで完結</div></div></header>
+  <div class="hero"><div class="wrap"><div class="eyebrow">無料のCSV整理ツール</div><h1>CSVを、<em>すっきり。</em></h1><p>重複した行を取り除き、余分な空白を整理。面倒なCSVの片づけを、数クリックで。</p><div class="feature-pills"><span>✓ ファイルを外部送信しない</span><span>✓ 日本語のCSVに対応</span><span>✓ 会員登録なし</span></div></div></div>
+  <main class="wrap"><section class="app-card" aria-labelledby="appTitle"><h2 id="appTitle">CSVを整理する</h2><p class="subtitle">CSVファイルを選び、オプションを指定して「整理する」を押してください。</p>
+      <div class="dropzone" id="dropzone"><div class="upload-icon" aria-hidden="true">⇧</div><strong>ここにCSVファイルをドロップ</strong><p>または、下のボタンから選択</p><label class="select-file">ファイルを選ぶ <input id="fileInput" type="file" accept=".csv,text/csv" aria-label="CSVファイルを選択"></label><div id="fileName" aria-live="polite"></div></div>
+      <div class="controls"><div><label class="control-title" for="encoding">文字コード</label><select id="encoding"><option value="utf-8">UTF-8（一般的なCSV）</option><option value="shift_jis">Shift_JIS（古いExcelなど）</option></select><span class="help" style="margin-left:0">文字が化ける場合は変更してください。</span></div>
+        <div><span class="control-title">整理オプション</span><div class="checks"><label class="check"><input id="trim" type="checkbox" checked><span>各セルの前後の空白を削除</span></label><label class="check"><input id="protect" type="checkbox" checked><span>表計算ソフトで数式と解釈される値を保護</span></label></div><span class="help">先頭が =、+、-、@ などのセルに「'」を付けます。負の数値にも影響するため、必要に応じて解除してください。</span></div>
+      </div>
+      <div class="actions"><button id="process" type="button" class="primary" disabled>整理する</button><button id="download" type="button" class="quiet" disabled>整理したCSVを保存</button><p id="status" role="status" aria-live="polite">CSVファイルを選択してください。（最大8MB）</p></div>
+      <div id="results" hidden><div class="stats"><div class="stat"><span>入力データ行数</span><strong id="rowsIn">0</strong></div><div class="stat"><span>重複を削除</span><strong id="duplicates">0</strong></div><div class="stat"><span>出力データ行数</span><strong id="rowsOut">0</strong></div></div><div class="preview-title">整理後のプレビュー（先頭8行）</div><div class="preview-scroll"><table><thead id="previewHead"></thead><tbody id="previewBody"></tbody></table></div><p id="resultNote" class="result-note"></p></div>
+    </section>
+    <div class="privacy"><section class="info"><h3>🔒 ファイルは端末の外に送りません</h3><p>CSVの内容はブラウザ内だけで処理します。ログイン・アップロード・広告トラッキングはありません。Webページへのアクセス自体はホスティングサービスの通信ログに記録される場合があります。</p></section><section class="info"><h3>💡 対応範囲について</h3><p>UTF-8／Shift_JIS形式のCSVに対応し、1行目を見出しとして扱います。重複判定はセルの完全一致です。Excel形式（.xlsx）には対応していません。重要なファイルはバックアップしてください。</p></section></div>
+  </main>
+  <footer><p>SheetClean Lite — 無料お試し版</p><p>このツールは現状のまま提供されます。重要なデータはバックアップし、結果を確認してからご利用ください。</p></footer>
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const input = $('fileInput'), select = $('encoding'), trim = $('trim'), protect = $('protect');
+  const processBtn = $('process'), downloadBtn = $('download');
+  const maxSize = 8 * 1024 * 1024;
+  let selected = null, output = null;
+
+  function status(message, error = false) { $('status').textContent = message; $('status').classList.toggle('error', error); }
+  function resetResult() { output = null; downloadBtn.disabled = true; $('results').hidden = true; }
+  function selectFile(file) {
+    resetResult();
+    if (!file) { selected = null; $('fileName').textContent = ''; processBtn.disabled = true; status('CSVファイルを選択してください。'); return; }
+    const csv = /\.csv$/i.test(file.name);
+    if (!csv) { selected = null; processBtn.disabled = true; $('fileName').textContent = ''; status('拡張子が .csv のファイルを選んでください。', true); return; }
+    if (file.size > maxSize) { selected = null; processBtn.disabled = true; $('fileName').textContent = ''; status('8MB以下のCSVファイルを選んでください。', true); return; }
+    selected = file; processBtn.disabled = false; $('fileName').textContent = `${file.name}（${(file.size / 1024).toFixed(1)} KB）`; status('準備できました。「整理する」を押してください。');
+  }
+  input.addEventListener('change', () => selectFile(input.files[0]));
+  for (const event of ['dragenter', 'dragover']) $('dropzone').addEventListener(event, e => { e.preventDefault(); $('dropzone').classList.add('active'); });
+  for (const event of ['dragleave', 'drop']) $('dropzone').addEventListener(event, e => { e.preventDefault(); $('dropzone').classList.remove('active'); });
+  $('dropzone').addEventListener('drop', e => { const file = e.dataTransfer && e.dataTransfer.files[0]; if (file) selectFile(file); });
+  for (const option of [select, trim, protect]) option.addEventListener('change', () => { if (selected) { resetResult(); status('設定を変更しました。もう一度「整理する」を押してください。'); } });
+
+  function parseCSV(text) {
+    // RFC 4180-style parsing of commas, CRLF/newlines, quoted fields, and escaped quotes.
+    const rows = []; let row = [], field = '', quoted = false, closedQuote = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (quoted) {
+        if (ch === '"' && text[i + 1] === '"') { field += '"'; i++; }
+        else if (ch === '"') { quoted = false; closedQuote = true; }
+        else field += ch;
+      } else if (closedQuote) {
+        if (ch === ',') { row.push(field); field = ''; closedQuote = false; }
+        else if (ch === '\n' || ch === '\r') { row.push(field); rows.push(row); row = []; field = ''; closedQuote = false; if (ch === '\r' && text[i + 1] === '\n') i++; }
+        else throw new Error('CSVの引用符の後ろに余計な文字があります。');
+      } else if (ch === '"') {
+        if (field) throw new Error('CSVの引用符の位置が正しくありません。');
+        quoted = true;
+      } else if (ch === ',') { row.push(field); field = ''; }
+      else if (ch === '\n' || ch === '\r') { row.push(field); rows.push(row); row = []; field = ''; if (ch === '\r' && text[i + 1] === '\n') i++; }
+      else field += ch;
+    }
+    if (quoted) throw new Error('CSVの引用符が閉じられていません。');
+    if (field !== '' || row.length || closedQuote) { row.push(field); rows.push(row); }
+    return rows;
+  }
+  function encodeCell(value) { const s = String(value); return /[",\r\n]/.test(s) ? '"' + s.replaceAll('"', '""') + '"' : s; }
+  function encodeCSV(rows) { return rows.map(row => row.map(encodeCell).join(',')).join('\r\n') + '\r\n'; }
+  function shield(value) { return /^[\s\u0000-\u001f]*[=+\-@]/u.test(value) ? "'" + value : value; }
+  function cleanRows(rows, trimEnabled, protectEnabled) {
+    if (!rows.length) throw new Error('CSVが空です。');
+    const header = rows[0].map(v => trimEnabled ? v.trim() : v);
+    const seen = new Set(), clean = [header];
+    let removed = 0, protectedCells = 0;
+    for (const sourceRow of rows.slice(1)) {
+      const row = sourceRow.map(v => trimEnabled ? v.trim() : v);
+      const key = JSON.stringify(row);
+      if (seen.has(key)) { removed++; continue; }
+      seen.add(key); clean.push(row);
+    }
+    if (protectEnabled) {
+      for (const row of clean) for (let i = 0; i < row.length; i++) {
+        const safe = shield(row[i]); if (safe !== row[i]) { protectedCells++; row[i] = safe; }
+      }
+    }
+    return { clean, removed, protectedCells, sourceCount: Math.max(0, rows.length - 1) };
+  }
+  function renderPreview(rows) {
+    $('previewHead').replaceChildren(); $('previewBody').replaceChildren();
+    const head = document.createElement('tr');
+    for (const value of rows[0]) { const cell = document.createElement('th'); cell.scope = 'col'; cell.textContent = value; head.append(cell); }
+    $('previewHead').append(head);
+    for (const row of rows.slice(1, 9)) {
+      const tr = document.createElement('tr');
+      for (const value of row) { const cell = document.createElement('td'); cell.textContent = value.length > 180 ? value.slice(0, 180) + '…' : value; tr.append(cell); }
+      $('previewBody').append(tr);
+    }
+  }
+  processBtn.addEventListener('click', async () => {
+    if (!selected) return;
+    processBtn.disabled = true; downloadBtn.disabled = true; $('results').hidden = true; status('処理しています…');
+    try {
+      // Yield once so the pending status is visible before parsing.
+      await new Promise(resolve => setTimeout(resolve, 10));
+      const buffer = await selected.arrayBuffer();
+      const decoded = new TextDecoder(select.value, { fatal: true }).decode(buffer).replace(/^\uFEFF/, '');
+      const rows = parseCSV(decoded);
+      const result = cleanRows(rows, trim.checked, protect.checked);
+      output = '\uFEFF' + encodeCSV(result.clean);
+      $('rowsIn').textContent = String(result.sourceCount);
+      $('duplicates').textContent = String(result.removed);
+      $('rowsOut').textContent = String(result.clean.length - 1);
+      $('resultNote').textContent = `${result.protectedCells}セルの数式対策を適用。処理後のCSVはUTF-8（BOM付き）で保存します。`;
+      renderPreview(result.clean); $('results').hidden = false; downloadBtn.disabled = false;
+      status(`${result.removed}行の重複を削除しました。結果を確認して保存してください。`);
+    } catch (e) {
+      resetResult();
+      const message = e instanceof TypeError ? 'ファイルの読み込みに失敗しました。文字コード設定を確認してください。' : (e.message || '処理に失敗しました。');
+      status('エラー：' + message, true);
+    } finally { processBtn.disabled = false; }
+  });
+  downloadBtn.addEventListener('click', () => {
+    if (!output) return;
+    const blob = new Blob([output], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob), anchor = document.createElement('a');
+    anchor.href = url; anchor.download = 'sheetclean-' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.append(anchor); anchor.click(); anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    status('CSVを保存しました。元ファイルは変更されていません。');
+  });
+})();
+</script>
+</body>
+</html>
