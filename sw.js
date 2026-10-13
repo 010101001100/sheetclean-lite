@@ -1,13 +1,14 @@
 /* Tiny Tools: same-origin, network-first, public HTML only. No user input is cached. */
 'use strict';
 const BASE = '/sheetclean-lite/';
-const CACHE = 'tinytools-pages-v1';
+const CACHE = 'tinytools-pages-v2';
 const PAGES = [
   BASE,
   BASE + 'apps/',
   BASE + 'handover-gap-checker/',
   BASE + 'announce-checker/',
-  BASE + 'dm-order-checker/'
+  BASE + 'dm-order-checker/',
+  BASE + 'meetup-brief/'
 ];
 self.addEventListener('install', event => {
   event.waitUntil(
