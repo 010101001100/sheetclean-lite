@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#102f39">
+<meta name="description" content="LINEで送る集合案内を、迷わず集まれる形に。日時・集合場所・目印・持ち物・連絡先の抜けを確認し、案内文コピーとカレンダー登録。無料・登録不要・端末内で作成。">
+<title>迷わない集合カード | 送る前に「どこ？何時？」をなくす</title>
+<style>
+:root{color-scheme:light;font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;--ink:#142c34;--muted:#5c6c70;--teal:#116b62;--deep:#102f39;--edge:#d7e4e0;--bg:#f5f9f7;--white:#fff;--warm:#fff5df}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);line-height:1.65}button,input,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}a{color:var(--teal)}:is(a,button,input,textarea):focus-visible{outline:3px solid #e9a83d;outline-offset:3px}[hidden]{display:none!important}
+.top{background:var(--deep);color:#fff}.top-inner{max-width:1180px;margin:auto;padding:15px 22px;display:flex;justify-content:space-between;gap:14px;align-items:center}.logo{font-size:1.03rem;font-weight:850;text-decoration:none;color:#fff}.nav{display:flex;gap:15px;align-items:center}.nav a{color:#e0f5ed;text-decoration:none;font-weight:680;font-size:.88rem}.nav a:hover{text-decoration:underline}
+.hero{background:radial-gradient(circle at 82% 16%,#d9f3dd 0,transparent 41%),linear-gradient(140deg,#f3fbf7,#edf4f0);padding:48px 0 37px;border-bottom:1px solid var(--edge)}.width{max-width:1180px;margin:auto;padding:0 22px}.eyebrow{color:var(--teal);font-size:.78rem;font-weight:870;letter-spacing:.08em}.hero h1{font-size:clamp(2rem,5vw,3.5rem);line-height:1.21;letter-spacing:-.06em;margin:10px 0 16px}.hero h1 em{font-style:normal;color:var(--teal)}.hero p{font-size:1rem;max-width:700px;color:#405e61;margin:0}.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.tags span{font-size:.75rem;border:1px solid #c9e5d9;padding:5px 11px;border-radius:22px;background:#fff;color:#326d61;font-weight:680}
+main{max-width:1180px;margin:26px auto 70px;padding:0 22px}.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(310px,.9fr);align-items:start;gap:22px}.panel{background:#fff;border:1px solid var(--edge);border-radius:21px;padding:25px;box-shadow:0 9px 35px #143e3910}.panel h2{font-size:1.25rem;letter-spacing:-.025em;margin:0 0 4px}.muted{font-size:.86rem;color:var(--muted);margin:0 0 18px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.field{display:grid;gap:6px;min-width:0}.span2{grid-column:1/-1}.field label{font-size:.84rem;font-weight:780}.field small{font-size:.73rem;color:var(--muted)}.field input,.field textarea{width:100%;border:1px solid #b9cdc7;background:#fcfefd;color:var(--ink);border-radius:11px;padding:11px 12px;min-width:0}.field textarea{min-height:75px;resize:vertical}.field input::placeholder,.field textarea::placeholder{color:#81918e}.label-pill{font-size:.62rem;padding:2px 6px;border-radius:6px;background:#e5f5ed;color:#17634d;margin-left:4px;vertical-align:middle}.label-pill.optional{background:#f0f2f2;color:#586a6b}
+.subhead{margin:19px 0 12px;font-size:1rem;border-top:1px solid var(--edge);padding-top:16px}.form-buttons{display:flex;flex-wrap:wrap;gap:9px;margin:17px 0 0}.btn{padding:11px 17px;border-radius:11px;border:1px solid #b9d6cc;background:#f2faf6;font-weight:820;color:#15594e}.btn:hover:not(:disabled){background:#dfefe6}.btn.primary{background:var(--teal);color:#fff;border-color:var(--teal)}.btn.primary:hover:not(:disabled){background:#085249}.btn.slate{background:#fff;color:#405862;border-color:#c3d2d1}
+.tip{border-radius:12px;background:#eff8f3;color:#41645b;padding:12px 14px;margin:16px 0 0;font-size:.8rem}
+.side{position:sticky;top:15px;display:grid;gap:17px}.scorebar{display:flex;gap:12px;justify-content:space-between;align-items:center;margin:14px 0 9px}.scorebar strong{font-size:1.1rem}.scorebar span{font-size:.79rem;color:var(--muted)}.meter{height:9px;border-radius:50px;background:#edf2ed;overflow:hidden}.meter>div{height:100%;width:0;background:var(--teal);border-radius:50px;transition:width .15s}.warnings{display:grid;gap:8px;margin:16px 0 0;padding:0;list-style:none}.warnings li{display:flex;gap:9px;padding:9px 11px;border-radius:9px;font-size:.83rem;background:var(--warm);color:#684e1d}.warnings .good{background:#e4f5e9;color:#236746}.check{flex:none}
+.paper{background:#fffefa;border:1px solid #e5e8db;border-radius:19px;overflow:hidden;box-shadow:0 14px 35px #0c382315}.paper-top{background:var(--deep);color:white;padding:24px 23px 18px}.paper-top span{font-size:.68rem;letter-spacing:.16em;color:#bce3d7;font-weight:870}.paper-top h3{font-size:clamp(1.28rem,3vw,1.65rem);margin:7px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.35}.paper-body{padding:19px 22px}.paper-row{display:grid;grid-template-columns:76px minmax(0,1fr);gap:6px;margin:0 0 12px;align-items:start}.paper-row dt{font-size:.78rem;color:#54716e;font-weight:760}.paper-row dd{margin:0;overflow-wrap:anywhere;white-space:pre-wrap;font-weight:650}.paper-row dd.empty{color:#a2722f;font-weight:720}.paper-bottom{background:#eff7ef;padding:13px 22px;color:#3c6b60;font-size:.73rem}.paper-link{margin:10px 0 0;display:inline-flex;color:var(--teal);font-size:.83rem;font-weight:780}
+.preview-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:13px}.preview-controls button{flex:1;min-width:130px}.feedback{font-size:.78rem;color:#38675c;min-height:1.6em;margin-top:7px}.export-area{margin-top:12px}.export-area summary{cursor:pointer;color:#426b63;font-weight:760;font-size:.85rem}.export-area textarea{width:100%;min-height:185px;border:1px solid var(--edge);border-radius:11px;margin-top:7px;padding:11px;font-size:.82rem;color:#344e52;resize:vertical}
+.footer{max-width:1180px;padding:0 22px 35px;margin:auto;font-size:.77rem;color:var(--muted)}.footer a{font-weight:760}
+@media(max-width:930px){.layout{grid-template-columns:1fr}.side{position:static;grid-template-columns:1fr 1fr}.side .panel{align-self:start}.side .preview-wrap{grid-column:2;grid-row:1 / span 2}}@media(max-width:700px){.width,main,.footer{padding-left:15px;padding-right:15px}.hero{padding:34px 0 30px}.layout,.side{display:grid;grid-template-columns:1fr}.side .preview-wrap{grid-column:auto;grid-row:auto}.panel{padding:19px;border-radius:15px}.form-grid{gap:10px}.nav{gap:11px}.nav a{font-size:.78rem}.paper-top{padding:20px}.paper-body{padding:17px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.meter>div{transition:none}}
+@media print{body{background:white}header,.hero,.form-panel,.check-panel,.preview-controls,.footer,.export-area,.feedback{display:none!important}main{max-width:none;margin:0;padding:0}.layout,.side{display:block}.preview-wrap{margin:0}.paper{box-shadow:none;border:0}.paper-top{-webkit-print-color-adjust:exact;print-color-adjust:exact}.paper-bottom{-webkit-print-color-adjust:exact;print-color-adjust:exact}a{color:inherit}}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-inner"><a class="logo" href="../apps/">✦ Tiny Tools</a><nav class="nav" aria-label="サイト内"><a href="../apps/">ツール一覧</a><a href="../announce-checker/">告知ちがいチェック ↗</a></nav></div></header>
+<section class="hero"><div class="width"><div class="eyebrow">MEETUP BRIEF · 無料</div><h1>「何時に、どこ？」を<br><em>もう聞かせない。</em></h1><p>LINE・メールで送る集合案内を、参加者が迷わない一枚に。足りない情報をその場で確認し、コピー・印刷・カレンダー登録まで。</p><div class="tags"><span>✓ 登録不要</span><span>✓ 入力内容は端末内で処理</span><span>✓ スマホ対応</span></div></div></section>
+<main><div class="layout">
+<section class="panel form-panel" aria-labelledby="formTitle"><h2 id="formTitle">1. 集合について入力</h2><p class="muted">未記入の項目は勝手に補いません。重要な情報ほど具体的に。</p>
+<div class="form-grid">
+<div class="field span2"><label for="eventTitle">集まりの名前 <span class="label-pill">基本</span></label><input id="eventTitle" maxlength="100" placeholder="例：週末のハイキング"></div>
+<div class="field"><label for="eventDate">集合日 <span class="label-pill">基本</span></label><input id="eventDate" type="date"></div>
+<div class="field"><label for="eventTime">集合時刻 <span class="label-pill">基本</span></label><input id="eventTime" type="time"></div>
+<div class="field"><label for="endTime">解散の目安 <span class="label-pill optional">任意</span></label><input id="endTime" type="time"></div>
+<div class="field"><label for="fee">お金 <span class="label-pill optional">任意</span></label><input id="fee" maxlength="90" placeholder="例：無料 / 交通費各自"></div>
+<div class="field span2"><label for="venue">集合場所 <span class="label-pill">基本</span></label><input id="venue" maxlength="160" placeholder="例：新宿駅 南口"></div>
+<div class="field span2"><label for="landmark">目印・どこで待つ？ <span class="label-pill optional">推奨</span></label><input id="landmark" maxlength="180" placeholder="例：改札を出て右側、時計の下"></div>
+<div class="field span2"><label for="address">住所・地図検索用のキーワード <span class="label-pill optional">任意</span></label><input id="address" maxlength="240" placeholder="例：東京都新宿区新宿3丁目" ><small>入力した場所だけを地図検索リンクにできます。クリック時はGoogleマップが開きます。</small></div>
+</div>
+<h3 class="subhead">参加者が困らないための情報</h3>
+<div class="form-grid">
+<div class="field span2"><label for="items">持ち物・服装</label><input id="items" maxlength="200" placeholder="例：飲み物、歩きやすい靴 / 特になし"></div>
+<div class="field span2"><label for="reply">参加連絡・回答期限</label><input id="reply" maxlength="220" placeholder="例：前日20時までにグループLINEで返信"></div>
+<div class="field span2"><label for="contact">遅刻・迷子の連絡先</label><input id="contact" maxlength="200" placeholder="例：幹事のLINEに連絡"></div>
+<div class="field span2"><label for="notes">その他・雨天時の対応</label><textarea id="notes" maxlength="600" placeholder="例：雨天中止。判断は当日7時にLINEで連絡します。"></textarea></div>
+</div>
+<div class="form-buttons"><button id="example" class="btn" type="button">✨ 入力例を試す</button><button id="reset" class="btn slate" type="button">すべて消す</button></div>
+<p class="tip">🔒 入力した内容はサーバーに送信しません。ページを閉じると消えます。個人情報を入れる場合は、共有先に注意してください。</p>
+</section>
+<div class="side">
+<section class="panel check-panel" aria-labelledby="checkTitle"><h2 id="checkTitle">2. 参加者目線でチェック</h2><p class="muted">相手が「聞き返さずに来られるか」を点検。</p><div class="scorebar"><strong id="completion">0 / 8 項目</strong><span>案内の充実度（目安）</span></div><div class="meter" aria-hidden="true"><div id="progress"></div></div><ul id="warnings" class="warnings" aria-live="polite"></ul></section>
+<section class="preview-wrap"><div class="paper" id="card" aria-label="集合案内のプレビュー"><div class="paper-top"><span>MEET HERE / 集合案内</span><h3 id="cardTitle">集まりの名前を入力</h3></div><div class="paper-body">
+<dl><div class="paper-row"><dt>📅 日時</dt><dd id="cardDate" class="empty">未入力</dd></div><div class="paper-row"><dt>📍 集合</dt><dd id="cardVenue" class="empty">未入力</dd></div><div class="paper-row" id="landmarkRow" hidden><dt>👀 目印</dt><dd id="cardLandmark"></dd></div><div class="paper-row" id="feeRow" hidden><dt>💰 お金</dt><dd id="cardFee"></dd></div><div class="paper-row" id="itemsRow" hidden><dt>🎒 持ち物</dt><dd id="cardItems"></dd></div><div class="paper-row" id="replyRow" hidden><dt>✉️ 参加連絡</dt><dd id="cardReply"></dd></div><div class="paper-row" id="contactRow" hidden><dt>☎️ 遅刻時</dt><dd id="cardContact"></dd></div><div class="paper-row" id="notesRow" hidden><dt>☔ その他</dt><dd id="cardNotes"></dd></div></dl>
+<a id="mapLink" class="paper-link" href="#" target="_blank" rel="noopener noreferrer" hidden>↗ 地図で場所を確認する</a></div><div class="paper-bottom">来る前に、日時と集合場所をもう一度チェック。</div></div>
+<div class="preview-controls"><button class="btn primary" id="copy" type="button">案内文をコピー</button><button class="btn" id="saveCalendar" type="button" disabled>📅 カレンダー用ファイル</button><button class="btn slate" id="print" type="button">カードを印刷</button></div>
+<p class="feedback" id="feedback" role="status" aria-live="polite"></p>
+<details class="export-area"><summary>LINE用の文章を確認・手動コピー</summary><textarea id="plain" readonly aria-label="作成した案内文"></textarea><p class="muted">ボタンでコピーできない場合はここから選択してください。カレンダーファイルは、端末のカレンダーに取り込める形式（.ics）です。終了時刻が未入力なら1時間後を仮設定します。</p></details></section>
+</div>
+</div></main>
+<footer class="footer">Tiny Tools / 迷わない集合カード · 計算と文章生成はブラウザ内で行います。送信前に必ず内容を確認してください。 <a href="../apps/">他の無料ツールも見る →</a></footer>
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const fields = ['eventTitle','eventDate','eventTime','endTime','fee','venue','landmark','address','items','reply','contact','notes'];
+const val = id => $(id).value.trim();
+const has = id => Boolean(val(id));
+const weekdays = ['日','月','火','水','木','金','土'];
+const escapeIcs = text => text.replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');
+function dateText(raw) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return '';
+  const bits = raw.split('-').map(Number), d = new Date(bits[0],bits[1]-1,bits[2]);
+  if (d.getFullYear()!==bits[0]||d.getMonth()!==bits[1]-1||d.getDate()!==bits[2]) return '';
+  return bits[0]+'年'+bits[1]+'月'+bits[2]+'日（'+weekdays[d.getDay()]+'）';
+}
+function timeText() {
+  const d = dateText(val('eventDate')), t = val('eventTime'), end = val('endTime');
+  const extra = end ? ' 〜 '+end+'ごろ' : '';
+  return [d,t ? t+extra : ''].filter(Boolean).join(' ');
+}
+const dynamicRows = [['landmark','cardLandmark','landmarkRow'],['fee','cardFee','feeRow'],['items','cardItems','itemsRow'],['reply','cardReply','replyRow'],['contact','cardContact','contactRow'],['notes','cardNotes','notesRow']];
+function render() {
+  const title=val('eventTitle'),venue=val('venue'),address=val('address');
+  $('cardTitle').textContent=title||'集まりの名前を入力';
+  $('cardDate').textContent=timeText()||'未入力'; $('cardDate').classList.toggle('empty',!timeText());
+  $('cardVenue').textContent=[venue,address].filter(Boolean).join('\n')||'未入力';
+  $('cardVenue').classList.toggle('empty',!venue);
+  for(const [source,target,row] of dynamicRows){$(row).hidden=!has(source);$(target).textContent=val(source);}
+  const link=$('mapLink');link.hidden=!address;if(address)link.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(address);
+  const required = [
+   {ok:!!title,text:'集まりの名前がまだありません'},
+   {ok:!!dateText(val('eventDate')),text:'集合日を決めましょう'},
+   {ok:has('eventTime'),text:'集合時刻を入れましょう'},
+   {ok:!!venue,text:'集合場所を入れましょう'},
+   {ok:has('landmark'),text:'改札・出口など「具体的な目印」があると迷いません'},
+   {ok:has('items'),text:'持ち物が不要でも「特になし」と書くと親切'},
+   {ok:has('contact'),text:'迷ったときの連絡方法を入れると安心'},
+   {ok:has('reply'),text:'参加の連絡方法・期限を書くと確認が楽'}
+  ];
+  const count=required.filter(x=>x.ok).length;
+  $('completion').textContent=count+' / 8 項目';$('progress').style.width=(count/8*100)+'%';
+  const list=$('warnings');list.replaceChildren();
+  for(const issue of required.filter(x=>!x.ok)){const li=document.createElement('li');const icon=document.createElement('span');icon.className='check';icon.textContent='△';li.append(icon,document.createTextNode(issue.text));list.append(li);}
+  if (val('endTime') && val('eventTime') && val('endTime')<=val('eventTime')) {
+    const li=document.createElement('li');li.textContent='⚠ 解散の目安が集合時刻より前か同じです。同日中の予定として確認してください。';list.prepend(li);
+  }
+  if(dateText(val('eventDate'))){const d=new Date(val('eventDate')+'T00:00:00'),today=new Date();today.setHours(0,0,0,0);if(d<today){const li=document.createElement('li');li.textContent='⚠ 集合日が過去の日付です。';list.prepend(li);}}
+  if(!list.children.length){const li=document.createElement('li');li.className='good';li.textContent='✓ 基本8項目がそろいました。日時・場所が正しいか最後に確認！';list.append(li);}
+  const parts=[ '【集合案内】',title||'【集まりの名前：未入力】','', '📅 日時：'+(timeText()||'【未入力】'),'📍 集合：'+(venue||'【未入力】') ];
+  if(address)parts.push('住所など：'+address);
+  const labels=[['landmark','👀 目印'],['fee','💰 お金'],['items','🎒 持ち物'],['reply','✉️ 参加連絡'],['contact','☎️ 遅刻・迷ったら'],['notes','☔ その他']];
+  for(const [id,label] of labels)if(has(id))parts.push(label+'：'+val(id));
+  if(address)parts.push('🗺 地図：'+link.href);
+  parts.push('','日時・場所を確認してお越しください。');
+  $('plain').value=parts.join('\n');
+  $('saveCalendar').disabled=!(title && dateText(val('eventDate')) && has('eventTime') && (!val('endTime') || val('endTime')>val('eventTime')));
+}
+async function copy(){
+ const text=$('plain').value;
+ try{if(!navigator.clipboard || !navigator.clipboard.writeText)throw new Error('clipboard unavailable');await navigator.clipboard.writeText(text);$('feedback').textContent='コピーしました。LINEやメールに貼り付けられます。';}
+ catch(e){$('feedback').textContent='自動コピーできませんでした。下の「文章を確認」から手動でコピーしてください。';$('plain').closest('details').open=true;$('plain').focus();$('plain').select();}
+}
+function foldLine(line){
+ let chunks=[],s='',len=0;
+ for(const char of line){const bytes=new TextEncoder().encode(char).length;if(len+bytes>73 && s){chunks.push(s);s=' ';len=1;}s+=char;len+=bytes;}
+ chunks.push(s);return chunks.join('\r\n');
+}
+function saveIcs(){
+ if($('saveCalendar').disabled)return;
+ const date=val('eventDate').replaceAll('-',''),start=val('eventTime').replace(':','');
+ let end=val('endTime').replace(':','');
+ if(!end){const t=val('eventTime').split(':').map(Number);const m=t[0]*60+t[1]+60;if(m>=1440){$('feedback').textContent='終了時刻が翌日になるため、解散の目安を入力してください。';return;}end=String(Math.floor(m/60)).padStart(2,'0')+String(m%60).padStart(2,'0');}
+ const unique=(typeof crypto!=='undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
+ const now=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+ const place=[val('venue'),val('address')].filter(Boolean).join(' / ');
+ const detail=[val('landmark')?'目印：'+val('landmark'):'',val('items')?'持ち物：'+val('items'):'',val('contact')?'連絡：'+val('contact'):'',val('notes')].filter(Boolean).join('\n');
+ const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Tiny Tools//Meetup Brief//JA','CALSCALE:GREGORIAN','BEGIN:VEVENT','UID:'+unique+'@tinytools','DTSTAMP:'+now,'DTSTART:'+date+'T'+start+'00','DTEND:'+date+'T'+end+'00','SUMMARY:'+escapeIcs(val('eventTitle')),'LOCATION:'+escapeIcs(place),'DESCRIPTION:'+escapeIcs(detail),'END:VEVENT','END:VCALENDAR'];
+ const ics=lines.map(foldLine).join('\r\n')+'\r\n';
+ const url=URL.createObjectURL(new Blob(['\uFEFF',ics],{type:'text/calendar;charset=utf-8'}));
+ const a=document.createElement('a');a.href=url;a.download='meetup-'+val('eventDate')+'.ics';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ $('feedback').textContent='カレンダーファイルを保存しました。日時は端末のローカル時刻として扱われます。';
+}
+fields.forEach(id=>$(id).addEventListener('input',()=>{render();$('feedback').textContent='';}));
+$('example').addEventListener('click',()=>{
+ const date=new Date();date.setDate(date.getDate()+10);
+ const day=date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
+ const sample={eventTitle:'週末の街歩き',eventDate:day,eventTime:'10:30',endTime:'13:00',venue:'東京駅 丸の内南口',landmark:'改札の外、案内板の前',address:'東京駅 丸の内南口',fee:'昼食代は各自',items:'歩きやすい靴・飲み物',reply:'前日20時までにグループLINEで返信',contact:'遅れるときは幹事にLINE',notes:'雨天の場合は当日8時に連絡します。'};
+ for(const id of fields)$(id).value=sample[id]||'';
+ render();$('feedback').textContent='架空のサンプルをセットしました。自由に書き換えてください。';
+});
+$('reset').addEventListener('click',()=>{for(const id of fields)$(id).value='';render();$('feedback').textContent='入力を消しました。';});
+$('copy').addEventListener('click',copy);
+$('saveCalendar').addEventListener('click',saveIcs);
+$('print').addEventListener('click',()=>window.print());
+render();
+})();
+</script>
+<script>if('serviceWorker' in navigator && location.protocol==='https:'){window.addEventListener('load',()=>navigator.serviceWorker.register('/sheetclean-lite/sw.js',{scope:'/sheetclean-lite/'}).catch(()=>{}));}</script>
+</body></html>
