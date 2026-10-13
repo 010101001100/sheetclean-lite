@@ -20,24 +20,25 @@ function unique(values){return [...new Set(values)].sort((a,b)=>a.localeCompare(
 function normalizeDigits(text){return text.normalize('NFKC').replace(/[，、]/g,',');}
 function extractAll(source){
   const text=normalizeDigits(source);
+  const prose=text.replace(/https?:\/\/[^\s<>\"'「」『』（）()]+/gi,' ');
   const dates=[],times=[],prices=[],urls=[],phones=[],capacities=[],weekdays=[];
   const dm=/(?:\b(20\d{2})\s*[年\/.-]\s*)?(1[0-2]|0?[1-9])\s*[月\/.-]\s*(3[01]|[12]\d|0?[1-9])\s*日?\s*(?:[（(]\s*([日月火水木金土])\s*(?:曜(?:日)?)?\s*[)）])?/g;
-  for(const m of text.matchAll(dm)){
+  for(const m of prose.matchAll(dm)){
     const year=m[1]?Number(m[1]):null,mo=Number(m[2]),day=Number(m[3]);
     if(year){const d=new Date(Date.UTC(year,mo-1,day));if(d.getUTCFullYear()!==year||d.getUTCMonth()!==mo-1||d.getUTCDate()!==day)continue;}
     else if(day>new Date(Date.UTC(2024,mo,0)).getUTCDate())continue;
     const key=(year?year+'-':'')+String(mo).padStart(2,'0')+'-'+String(day).padStart(2,'0');dates.push(key);
     if(year&&m[4]){const expected='日月火水木金土'[new Date(Date.UTC(year,mo-1,day)).getUTCDay()];if(expected!==m[4])weekdays.push({written:m[0].trim(),correct:expected+'曜日'});}
   }
-  for(const m of text.matchAll(/(?<![\d])([01]?\d|2[0-3])\s*(?::|時)\s*([0-5]\d)?\s*(?:分)?(?!\d)/g)){
+  for(const m of prose.matchAll(/(?<![\d])([01]?\d|2[0-3])\s*(?::|時)\s*([0-5]\d)?\s*(?:分)?(?!\d)/g)){
     if(!m[0].includes(':')&&!m[0].includes('時'))continue;
     const hour=Number(m[1]),minute=m[2]?Number(m[2]):0;times.push(String(hour).padStart(2,'0')+':'+String(minute).padStart(2,'0'));
   }
-  for(const m of text.matchAll(/(?:[¥￥]\s*([\d,]+)|([\d,]+)\s*円)/g)){const n=Number((m[1]||m[2]).replace(/,/g,''));if(Number.isSafeInteger(n))prices.push(n+'円');}
-  if(/(?:参加費|入場料|料金|価格)\s*(?:は|:|：)?\s*無料/.test(text))prices.push('0円');
+  for(const m of prose.matchAll(/(?:[¥￥]\s*([\d,]+)|([\d,]+)\s*円)/g)){const n=Number((m[1]||m[2]).replace(/,/g,''));if(Number.isSafeInteger(n))prices.push(n+'円');}
+  if(/(?:参加費|入場料|料金|価格)\s*(?:は|:|：)?\s*無料/.test(prose))prices.push('0円');
   for(const m of text.matchAll(/https?:\/\/[^\s<>"'「」『』（）()]+/gi)){urls.push(m[0].replace(/[.,。!！?？、;；]+$/u,''));}
-  for(const m of text.matchAll(/(?<!\d)(0\d{1,4}[-\s]\d{1,4}[-\s]\d{3,4})(?!\d)/g)){const count=m[1].replace(/\D/g,'').length;if(count>=10&&count<=11)phones.push(m[1].replace(/[\s]/g,'-'));}
-  for(const m of text.matchAll(/(?:定員|先着|募集人数|参加者)\s*(?:は|:|：)?\s*([\d,]+)\s*(?:名|人|席)/g)){capacities.push(Number(m[1].replace(/,/g,''))+'人');}
+  for(const m of prose.matchAll(/(?<!\d)(0\d{1,4}[-\s]\d{1,4}[-\s]\d{3,4})(?!\d)/g)){const count=m[1].replace(/\D/g,'').length;if(count>=10&&count<=11)phones.push(m[1].replace(/[\s]/g,'-'));}
+  for(const m of prose.matchAll(/(?:定員|先着|募集人数|参加者)\s*(?:は|:|：)?\s*([\d,]+)\s*(?:名|人|席)/g)){capacities.push(Number(m[1].replace(/,/g,''))+'人');}
   return {dates:unique(dates),times:unique(times),prices:unique(prices),urls:unique(urls),phones:unique(phones),capacities:unique(capacities),weekdays};
 }
 function compareFacts(source,target){
@@ -46,6 +47,11 @@ function compareFacts(source,target){
     const left=a[key],right=b[key];if(!left.length&&!right.length)continue;
     if(!left.length){issues.push({kind:'review',label,detail:'比較元に情報がありません。告知文: '+right.join(' / ')});continue;}
     if(!right.length){issues.push({kind:'review',label,detail:'告知文側で見つかりません。確定版: '+left.join(' / ')});continue;}
+    if(key==='dates'){
+      const core=vals=>unique(vals.map(v=>v.slice(-5))).join('|');
+      const unspecified=left.concat(right).some(v=>v.length===5);
+      if(core(left)===core(right)&&unspecified){issues.push({kind:'review',label,detail:'月日は同じですが、年が省略されています。確定版: '+left.join(' / ')+'　／　告知文: '+right.join(' / ')+'。年と曜日を確認してください。'});continue;}
+    }
     if(left.join('|')===right.join('|'))issues.push({kind:'ok',label,detail:left.join(' / ')});
     else issues.push({kind:'bad',label,detail:'確定版: '+left.join(' / ')+'　／　告知文: '+right.join(' / ')});
   }
