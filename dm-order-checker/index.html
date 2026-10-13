@@ -14,7 +14,7 @@ label{font-weight:700;display:block;margin:12px 0 6px}select,input,textarea{widt
 .note{font-size:.88rem;color:#586980}.checklist{display:grid;gap:12px}.item{border:1px solid #d7e1ed;border-radius:12px;padding:14px;background:#fcfdff}.item-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}.item strong{font-size:1.03rem}.item p{color:#53647c;margin:3px 0 10px}.choices{display:flex;flex-wrap:wrap;gap:7px}.choices button{border-radius:999px;padding:7px 12px;background:white;border:1px solid #b5c5d8;color:#294360}.choices button[aria-pressed="true"]{background:#204f91;border-color:#204f91;color:white}.signal{font-size:.83rem;margin:8px 0 0;color:#8a581b}.status{background:#f0f5ff;border-radius:10px;padding:12px 14px;font-weight:700;margin:10px 0}.output{white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid #d4e0ef;background:#f9fbff;border-radius:12px;padding:16px;min-height:110px}.side{display:grid;grid-template-columns:1fr 1fr;gap:14px}.side label{margin-top:2px}
 footer{font-size:.85rem;color:#647188;margin-top:25px}
 @media(max-width:640px){section{padding:17px}.side{grid-template-columns:1fr}.bar{padding:10px 15px}}
-</style></head>
+</style><link rel="manifest" href="/sheetclean-lite/manifest.webmanifest"><link rel="icon" href="/sheetclean-lite/icon.svg" type="image/svg+xml"><meta name="theme-color" content="#101d30"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Tiny Tools"></head>
 <body><header><div class="bar"><a class="brand" href="../apps/">無料ツール集</a><nav aria-label="アプリメニュー"><button id="menu" type="button" aria-expanded="false" aria-controls="panel">☰ メニュー</button><div id="panel" hidden><a href="../apps/">✦ 全ツールを探す</a><a href="../">CSV整理 — SheetClean Lite</a><a href="../handover-gap-checker/">引き継ぎ穴チェッカー</a><a href="../announce-checker/">告知ちがいチェッカー</a><a href="./" aria-current="page">DM注文の聞き忘れチェッカー</a></div></nav></div></header>
 <main><span class="tag">無料・登録不要・自動送信なし</span><h1>DM注文の聞き忘れチェッカー</h1><p class="lead">注文のやり取りで「数量を聞き忘れた」「希望日が分からない」を防ぐ。<strong>確認済みの項目だけ</strong>印を付けると、まだ聞くべき質問をまとめて返信文にできます。</p>
 <section><h2>① 受注の種類を選ぶ</h2><label for="kind">注文・問い合わせの種類</label><select id="kind"><option value="handmade">ハンドメイド・オーダー作品</option><option value="cake">オーダーケーキ・お菓子</option><option value="reservation">予約・取り置き</option><option value="commission">イラスト・制作依頼</option></select><p class="note">切り替えるとチェック状態はリセットされます。未確認の項目は、質問としてまとめます。</p></section>
@@ -107,4 +107,11 @@ $('make').addEventListener('click',()=>{
 });
 $('copy').addEventListener('click',async()=>{if(!generated)return;try{await navigator.clipboard.writeText(generated);$('copyStatus').textContent='コピーしました。送信前に内容をご確認ください。'}catch(e){$('copyStatus').textContent='コピーできませんでした。出力欄の文章を選択してコピーしてください。'}});
 reset();
+</script><script>
+/* Register only on the secure public Pages site; failures never block the tools. */
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sheetclean-lite/sw.js', { scope: '/sheetclean-lite/' }).catch(() => {});
+  });
+}
 </script></body></html>
