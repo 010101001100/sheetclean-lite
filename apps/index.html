@@ -58,7 +58,7 @@ footer{border-top:1px solid #e7e8e5;padding:25px 24px 40px;color:#627180;font-si
 @media(max-width:850px){.hero-inner{grid-template-columns:1fr;gap:0;padding-top:43px}.hero-illustration{height:160px;margin-top:6px;max-width:400px}.mock-window{inset:8px 35px 0 30px}.float-note{font-size:12px;padding:7px 10px}.float-note b{width:25px;height:25px}.note-one{left:0;top:0}.note-two{bottom:0;right:0}}
 @media(max-width:640px){.bar-inner{padding:12px 17px}.bar-note{display:none}.hero-inner{padding:39px 19px 66px}h1{font-size:43px}.hero-illustration{height:120px;margin-top:17px}.mock-window{inset:0 36px 0 30px;padding:14px}.mock-lines{margin-top:12px;gap:8px}.mock-lines span{height:7px}.note-one{top:-8px}.note-two{bottom:-9px}main{padding:0 14px 65px}.finder{padding:17px;margin-top:-25px;border-radius:19px}.hint{display:none}.section-top{margin-top:36px}.grid{grid-template-columns:1fr;gap:14px}.card{padding:19px;min-height:228px;border-radius:19px}.filter{padding:8px 12px}.how{padding:21px;display:block}.how-badge{margin-top:14px;width:max-content}.recent.show{align-items:flex-start;flex-direction:column}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
-</style></head>
+</style><link rel="manifest" href="/sheetclean-lite/manifest.webmanifest"><link rel="icon" href="/sheetclean-lite/icon.svg" type="image/svg+xml"><meta name="theme-color" content="#101d30"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Tiny Tools"></head>
 <body>
 <a class="skip" href="#appGrid">ツール一覧へ移動</a>
 <header class="sitebar"><div class="bar-inner"><a href="./" class="logo"><span class="logo-mark" aria-hidden="true">✳</span><span>Tiny Tools</span></a><div class="bar-note">ちょっと面倒、を手軽に。</div><a class="home-link" href="../">CSV整理を開く ↗</a></div></header>
@@ -149,4 +149,11 @@ document.addEventListener('keydown',e=>{
 });
 render();showRecent();
 })();
+</script><script>
+/* Register only on the secure public Pages site; failures never block the tools. */
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sheetclean-lite/sw.js', { scope: '/sheetclean-lite/' }).catch(() => {});
+  });
+}
 </script></body></html>
