@@ -44,7 +44,10 @@
     .dropzone p { margin:3px 0 13px; color:var(--sub); font-size:.86rem; }
     .select-file { display:inline-flex; justify-content:center; align-items:center; border:1px solid var(--blue); background:white; color:var(--blue-dark); border-radius:9px; padding:9px 20px; font-weight:760; cursor:pointer; }
     .select-file:hover { background:#eaf4f7; }
+    .sample-button { display:inline-flex; justify-content:center; align-items:center; margin-left:8px; border:1px solid #b7ced8; background:#e9f5fa; color:var(--blue-dark); border-radius:9px; padding:9px 17px; font-weight:760; cursor:pointer; }
+    .sample-button:hover { background:#d6edf3; }
     .select-file:focus-within { outline:3px solid #92c9dc; outline-offset:2px; }
+    .sample-note { color:var(--sub); font-size:.79rem; margin:12px auto 0; max-width:420px; }
     .select-file input { position:absolute; width:1px; height:1px; opacity:0; overflow:hidden; }
     #fileName { min-height:1.5em; margin-top:10px; color:var(--blue-dark); font-weight:650; overflow-wrap:anywhere; font-size:.84rem; }
     .controls { display:grid; grid-template-columns:minmax(190px,1fr) 1.35fr; gap:22px; margin-top:24px; padding:20px; border-radius:14px; background:#f7f9fa; }
@@ -91,7 +94,7 @@
   <header><div class="wrap"><div class="brand"><div class="brand-icon" aria-hidden="true">≋</div>SheetClean <small>LITE</small></div><div class="header-note">登録不要・無料・ブラウザで完結</div><nav class="site-nav" aria-label="アプリメニュー"><button id="menuToggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="menuPanel" aria-label="アプリメニューを開く">☰ <span>メニュー</span></button><div id="menuPanel" class="menu-panel" hidden><a href="apps/" style="background:#e9f5fa">✦ 全ツールを探す</a><a href="https://010101001100.github.io/sheetclean-lite/" aria-current="page">CSV整理 — SheetClean Lite</a><a href="https://010101001100.github.io/sheetclean-lite/handover-gap-checker/">引き継ぎ穴チェッカー</a><a href="https://010101001100.github.io/sheetclean-lite/announce-checker/">告知ちがいチェッカー</a><a href="https://010101001100.github.io/sheetclean-lite/dm-order-checker/">DM注文の聞き忘れチェッカー</a><p>無料ツールを順次追加します。</p></div></nav></div></header>
   <div class="hero"><div class="wrap"><div class="eyebrow">無料のCSV整理ツール</div><h1>CSVを、<em>すっきり。</em></h1><p>重複した行を取り除き、余分な空白を整理。面倒なCSVの片づけを、数クリックで。</p><div class="feature-pills"><span>✓ ファイルを外部送信しない</span><span>✓ 日本語のCSVに対応</span><span>✓ 会員登録なし</span></div><a class="portal-cta" href="apps/">✦ ほかの無料ツールを探す <span aria-hidden="true">↗</span></a></div></div>
   <main class="wrap"><section class="app-card" aria-labelledby="appTitle"><h2 id="appTitle">CSVを整理する</h2><p class="subtitle">CSVファイルを選び、オプションを指定して「整理する」を押してください。</p>
-      <div class="dropzone" id="dropzone"><div class="upload-icon" aria-hidden="true">⇧</div><strong>ここにCSVファイルをドロップ</strong><p>または、下のボタンから選択</p><label class="select-file">ファイルを選ぶ <input id="fileInput" type="file" accept=".csv,text/csv" aria-label="CSVファイルを選択"></label><div id="fileName" aria-live="polite"></div></div>
+      <div class="dropzone" id="dropzone"><div class="upload-icon" aria-hidden="true">⇧</div><strong>ここにCSVファイルをドロップ</strong><p>または、下のボタンから選択</p><label class="select-file">ファイルを選ぶ <input id="fileInput" type="file" accept=".csv,text/csv" aria-label="CSVファイルを選択"></label><button type="button" id="trySample" class="sample-button">✨ サンプルで試す</button><div class="sample-note">CSVがなくてもOK。架空のデータをワンタップで整理できます。</div><div id="fileName" aria-live="polite"></div></div>
       <div class="controls"><div><label class="control-title" for="encoding">文字コード</label><select id="encoding"><option value="utf-8">UTF-8（一般的なCSV）</option><option value="shift_jis">Shift_JIS（古いExcelなど）</option></select><span class="help" style="margin-left:0">文字が化ける場合は変更してください。</span></div>
         <div><span class="control-title">整理オプション</span><div class="checks"><label class="check"><input id="trim" type="checkbox" checked><span>各セルの前後の空白を削除</span></label><label class="check"><input id="protect" type="checkbox" checked><span>表計算ソフトで数式と解釈される値を保護</span></label></div><span class="help">先頭が =、+、-、@ などのセルに「'」を付けます。負の数値にも影響するため、必要に応じて解除してください。</span></div>
       </div>
@@ -209,6 +212,14 @@
       const message = e instanceof TypeError ? 'ファイルの読み込みに失敗しました。文字コード設定を確認してください。' : (e.message || '処理に失敗しました。');
       status('エラー：' + message, true);
     } finally { processBtn.disabled = false; }
+  });
+  $('trySample').addEventListener('click', () => {
+    const csv = '名前,部署,メモ\r\n田中,営業,  確認済み  \r\n田中,営業,確認済み\r\n佐藤,開発,=1+1\r\n鈴木,総務, 未対応 \r\n';
+    select.value = 'utf-8';
+    trim.checked = true;
+    protect.checked = true;
+    selectFile(new File([csv], 'sample.csv', { type: 'text/csv' }));
+    processBtn.click();
   });
   downloadBtn.addEventListener('click', () => {
     if (!output) return;
