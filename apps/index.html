@@ -58,6 +58,10 @@ footer{border-top:1px solid #e7e8e5;padding:25px 24px 40px;color:#627180;font-si
 @media(max-width:850px){.hero-inner{grid-template-columns:1fr;gap:0;padding-top:43px}.hero-illustration{height:160px;margin-top:6px;max-width:400px}.mock-window{inset:8px 35px 0 30px}.float-note{font-size:12px;padding:7px 10px}.float-note b{width:25px;height:25px}.note-one{left:0;top:0}.note-two{bottom:0;right:0}}
 @media(max-width:640px){.bar-inner{padding:12px 17px}.bar-note{display:none}.hero-inner{padding:39px 19px 66px}h1{font-size:43px}.hero-illustration{height:120px;margin-top:17px}.mock-window{inset:0 36px 0 30px;padding:14px}.mock-lines{margin-top:12px;gap:8px}.mock-lines span{height:7px}.note-one{top:-8px}.note-two{bottom:-9px}main{padding:0 14px 65px}.finder{padding:17px;margin-top:-25px;border-radius:19px}.hint{display:none}.section-top{margin-top:36px}.grid{grid-template-columns:1fr;gap:14px}.card{padding:19px;min-height:228px;border-radius:19px}.filter{padding:8px 12px}.how{padding:21px;display:block}.how-badge{margin-top:14px;width:max-content}.recent.show{align-items:flex-start;flex-direction:column}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+.quick-find{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-top:12px}.quick-find>span{font-size:12px;color:#687889;margin-right:2px}.quick-find button{font-size:12px;font-weight:750;border:1px solid #d5e3e1;color:#1b6965;background:#f5fbf8;padding:7px 10px;border-radius:9px}.quick-find button:hover{background:#dff4e9}
+.install{margin-top:18px;background:#fff;border:1px solid #dce4df;border-radius:21px;padding:22px 25px;display:flex;justify-content:space-between;gap:24px;align-items:center}.install h2{margin:0 0 7px;font-size:21px;letter-spacing:-.035em}.install p{margin:0;font-size:14px;color:#586a78;line-height:1.8}.install-btn{white-space:nowrap;border:0;background:#137669;color:#fff;padding:13px 17px;border-radius:12px;font-weight:850}.install-help{margin-top:16px;padding:15px;background:#eef8f2;border:1px solid #d7e9dd;border-radius:12px;font-size:13px;color:#3d5554}.install-help[hidden]{display:none}.install-help p{font-size:13px;margin:5px 0}.install-help strong{color:#1e574e}.install-notice{font-weight:750;color:#0d7763;margin-top:7px!important}
+@media(max-width:640px){.install{display:block;padding:21px}.install-btn{margin-top:15px;width:100%}.quick-find button{padding:7px 9px}}
 </style><link rel="manifest" href="/sheetclean-lite/manifest.webmanifest"><link rel="icon" href="/sheetclean-lite/icon.svg" type="image/svg+xml"><meta name="theme-color" content="#101d30"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Tiny Tools"></head>
 <body>
 <a class="skip" href="#appGrid">ツール一覧へ移動</a>
@@ -71,7 +75,7 @@ footer{border-top:1px solid #e7e8e5;padding:25px 24px 40px;color:#627180;font-si
 </div></div>
 <main>
 <section class="finder" aria-label="ツールを探す"><div class="finder-head"><label for="q">何をしたいですか？</label><span class="hint">PCなら / または Ctrl + K で検索</span></div><div class="searchline"><span class="mag" aria-hidden="true">⌕</span><input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="例：CSV、SNS、引き継ぎ、注文…" aria-controls="appGrid"><button id="clear" type="button" hidden aria-label="検索をクリア">消す</button></div>
-<div class="filter-row"><div class="filters" role="group" aria-label="カテゴリーで絞り込み"><button class="filter" data-filter="all" aria-pressed="true">すべて</button><button class="filter" data-filter="work" aria-pressed="false">仕事</button><button class="filter" data-filter="social" aria-pressed="false">SNS・発信</button><button class="filter" data-filter="shop" aria-pressed="false">お店</button><button class="filter" data-filter="data" aria-pressed="false">データ</button><button class="filter" data-filter="favorite" aria-pressed="false">★ お気に入り</button></div><button class="random-btn" id="random" type="button">✦ おまかせで発見</button></div></section>
+<div class="quick-find" aria-label="よくある探し方"><span>例えば</span><button type="button" data-quick="CSV">CSVを整理</button><button type="button" data-quick="告知">投稿前に確認</button><button type="button" data-quick="引き継ぎ">引き継ぐ</button><button type="button" data-quick="注文">注文の返信</button></div><div class="filter-row"><div class="filters" role="group" aria-label="カテゴリーで絞り込み"><button class="filter" data-filter="all" aria-pressed="true">すべて</button><button class="filter" data-filter="work" aria-pressed="false">仕事</button><button class="filter" data-filter="social" aria-pressed="false">SNS・発信</button><button class="filter" data-filter="shop" aria-pressed="false">お店</button><button class="filter" data-filter="data" aria-pressed="false">データ</button><button class="filter" data-filter="favorite" aria-pressed="false">★ お気に入り</button></div><button class="random-btn" id="random" type="button">✦ おまかせで発見</button></div></section>
 <div class="recent" id="recent" aria-live="polite"><div><span>この一覧から最近開いたツール</span><strong id="recentName"></strong></div><a id="recentLink" href="../">もう一度開く ↗</a></div>
 <div class="section-top"><div><div class="eyebrow">EXPLORE THE TOOLS</div><h2>使えるツールを探す</h2></div><div class="count" id="count" role="status" aria-live="polite">4個のツール</div></div>
 <div class="grid" id="appGrid">
@@ -82,7 +86,7 @@ footer{border-top:1px solid #e7e8e5;padding:25px 24px 40px;color:#627180;font-si
 </div>
 <div class="empty" id="empty" role="status"><strong>まだ該当するツールがないみたい。</strong><span>別の言葉で探すか、「すべて」に戻してみてね。</span></div>
 <section class="how"><div><h2>ログインも、面倒な準備もなし。</h2><p>気になるツールを選んですぐに使えます。お気に入りと「最近開いた」は、この端末のブラウザ内にだけ保存。ツールの操作内容を集めるためのアカウントは必要ありません。</p></div><div class="how-badge">◎ 4つの無料ツール</div></section>
-</main>
+<section class="install" aria-labelledby="installTitle"><div><h2 id="installTitle">いつもの画面から、ワンタップ。</h2><p>よく使うならスマホのホーム画面に追加。オンラインで読み込んだページは、通信が切れても開ける場合があります。ブラウザや端末の設定により利用できない場合もあります。</p><p class="install-notice" id="installNotice" role="status" aria-live="polite"></p><div class="install-help" id="installHelp" hidden><p><strong>iPhone・iPad（Safari）：</strong>共有ボタン →「ホーム画面に追加」</p><p><strong>Android（Chrome）：</strong>右上の「︙」→「ホーム画面に追加」または「アプリをインストール」</p><p><strong>PC：</strong>対応ブラウザならアドレスバーのインストールアイコンから追加できます。</p><p>※ 入力したファイルや文章は保存しません。オフライン機能はブラウザのキャッシュ設定に依存します。</p></div></div><button class="install-btn" id="installBtn" type="button" aria-expanded="false" aria-controls="installHelp">追加する方法を見る ↗</button></section></main>
 <footer><div class="foot-inner"><span>© Tiny Tools — ちょっと面倒、を手軽に。</span><span>各ツールは補助目的です。重要な結果はご自身で確認してください。</span></div></footer>
 <script>
 (()=>{
@@ -146,6 +150,31 @@ document.addEventListener('keydown',e=>{
  }else if(e.key==='Escape'&&document.activeElement===input){
   input.value='';render();input.blur();
  }
+});
+
+for(const btn of document.querySelectorAll('[data-quick]'))btn.addEventListener('click',()=>{
+  filter='all';input.value=btn.dataset.quick;render();input.focus();
+  document.getElementById('appGrid').scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+});
+let pendingInstallPrompt=null;
+window.addEventListener('beforeinstallprompt',event=>{
+  event.preventDefault();pendingInstallPrompt=event;
+  $('installBtn').textContent='ホーム画面に追加 ↗';
+});
+$('installBtn').addEventListener('click',async()=>{
+  if(pendingInstallPrompt){
+    const request=pendingInstallPrompt;pendingInstallPrompt=null;
+    try{await request.prompt();await request.userChoice;}catch(e){}
+    $('installBtn').textContent='追加する方法を見る ↗';
+    return;
+  }
+  const expanded=$('installHelp').hidden;
+  $('installHelp').hidden=!expanded;
+  $('installBtn').setAttribute('aria-expanded',String(expanded));
+});
+window.addEventListener('appinstalled',()=>{
+  pendingInstallPrompt=null;$('installNotice').textContent='ホーム画面への追加が完了しました。';
+  $('installBtn').textContent='追加する方法を見る ↗';
 });
 render();showRecent();
 })();
