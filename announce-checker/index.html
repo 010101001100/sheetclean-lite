@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="イベント告知の日時・曜日・料金・URL・電話番号・定員の食い違いを、元資料とSNS投稿を貼るだけで点検。登録不要、文章は外部送信しません。">
+<title>告知ちがいチェッカー | 日時・料金・URLの食い違いを公開前に発見</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif;color:#17263c;background:#f5f7fb}*{box-sizing:border-box}body{margin:0;line-height:1.65}header{background:white;border-bottom:1px solid #dae2ee}.head{max-width:1020px;margin:auto;padding:13px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{font-weight:850;color:#17263c;text-decoration:none}.nav{position:relative}.toggle{margin:0;background:#fff;color:#224c9c;border:1px solid #bccbe0}.panel{position:absolute;right:0;top:calc(100% + 8px);width:min(290px,calc(100vw - 32px));background:white;border:1px solid #d4dfed;border-radius:12px;padding:8px;z-index:10;box-shadow:0 12px 30px #1a355127}.panel[hidden]{display:none}.panel a{display:block;text-decoration:none;color:#224c9c;padding:11px 12px;border-radius:9px}.panel a:hover,.panel a:focus-visible{background:#eff4fd}main{max-width:1020px;margin:auto;padding:24px 18px 80px}h1{font-size:clamp(1.7rem,4vw,2.5rem);line-height:1.3;margin:12px 0}h2{font-size:1.3rem;margin:0 0 12px}p{margin:10px 0}.eyebrow{font-weight:800;color:#2855a2;letter-spacing:.08em;font-size:.85rem}.lead{font-size:1.06rem;max-width:780px}.small{color:#536379;font-size:.9rem}.card{border:1px solid #dce5f1;background:#fff;border-radius:18px;padding:22px;margin-top:22px;box-shadow:0 8px 24px #163a5a09}label{display:block;font-weight:750;margin:12px 0 7px}textarea{font:inherit;width:100%;resize:vertical;min-height:175px;padding:13px;border-radius:11px;border:1px solid #b9c7dc;background:#fff;color:#17263c}.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}.buttons{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}button{font:inherit;font-weight:700;border:none;border-radius:10px;padding:11px 16px;background:#185acc;color:white;cursor:pointer}button.secondary{background:#eaf1fd;color:#1d4a96}button:disabled{opacity:.55;cursor:not-allowed}button:focus-visible,a:focus-visible,textarea:focus-visible{outline:3px solid #e7a331;outline-offset:2px}.summary{font-weight:800;padding:12px 14px;background:#f0f5fc;border-radius:12px;margin:12px 0}.finding{border-left:4px solid #d38a25;padding:12px 14px;background:#fff9ef;margin:9px 0;border-radius:0 8px 8px 0}.finding.bad{border-color:#c84b41;background:#fff4f1}.finding.good{border-color:#21966d;background:#effbf6}.finding strong{display:block}.finding .small{overflow-wrap:anywhere}.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}.note{border-radius:12px;background:#f0f4fa;padding:15px}.sample{font-size:.88rem}ul{padding-left:21px}@media(max-width:730px){.pair,.cols{grid-template-columns:1fr}.card{padding:17px}.head{padding:12px 16px}}
+</style></head><body>
+<header><div class="head"><a class="brand" href="../">無料ツール集</a><nav class="nav" aria-label="アプリメニュー"><button type="button" class="toggle" id="navToggle" aria-controls="navPanel" aria-expanded="false">☰ メニュー</button><div id="navPanel" class="panel" hidden><a href="../">CSV整理 — SheetClean Lite</a><a href="../handover-gap-checker/">引き継ぎ穴チェッカー</a><a href="./" aria-current="page">告知ちがいチェッカー</a></div></nav></div></header>
+<main><div class="eyebrow">PUBLISH PRE-FLIGHT · 無料・登録不要</div><h1>告知ちがいチェッカー</h1><p class="lead">チラシ・公式案内・SNS投稿で、<strong>日時・参加費・URLなどが食い違っていないか</strong>公開前に確認。文章がまるごと違っていても、重要な数字やリンクだけを比べます。</p><p class="small">入力した文章はこのブラウザ内だけで比較し、外部送信・自動保存しません。実際の公式案内を正として貼り付けてください。</p>
+<section class="card" aria-labelledby="inputHeading"><h2 id="inputHeading">1. 文章を貼り付ける</h2><div class="pair"><div><label for="source">確定版の案内（比較元）</label><textarea id="source" maxlength="30000" placeholder="例：10月24日（土）13:00～16:00、参加費500円、定員20名、申込先 https://example.jp/... "></textarea></div><div><label for="target">確認したい告知文（SNS・メールなど）</label><textarea id="target" maxlength="30000" placeholder="例：10月25日（日）13時から、参加費無料。申し込みは... "></textarea></div></div><div class="buttons"><button id="compare" type="button">食い違いをチェック</button><button id="demo" type="button" class="secondary">サンプルを試す</button><button id="clear" type="button" class="secondary">すべて消す</button></div></section>
+<section class="card" id="result" aria-live="polite" aria-labelledby="resultHeading"><h2 id="resultHeading">2. チェック結果</h2><div id="status" class="summary">文章を入力して「食い違いをチェック」を押してください。</div><div id="findings"></div><div class="buttons"><button id="copy" class="secondary" type="button" disabled>結果をコピー</button></div></section>
+<section class="card"><h2>何を確認できる？</h2><div class="cols"><div class="note"><strong>自動抽出・照合</strong><ul><li>日付（年／月／日、月／日）</li><li>時刻（13:00、13時30分など）</li><li>料金（500円、¥500、無料）</li><li>URL・電話番号・定員人数</li><li>日付と曜日が一致するか（西暦の年が必要）</li></ul></div><div class="note"><strong>人の確認が必要</strong><ul><li>開催場所・対象者・申込方法</li><li>「先着」「税込」「雨天中止」などの条件</li><li>画像内の文字・写真・QRコード</li><li>「来週」「午後」など曖昧な時間表現</li><li>記載されていない情報や文脈上の意味</li></ul></div></div><p class="small">このツールは定型的な数字・文字列のみを比較します。自動抽出の漏れや誤検出があり、問題なしと表示されても内容全体の正しさを保証しません。実際に送信・公開する前に元資料と目視で照合してください。</p></section></main>
+<script>
+'use strict';
+/* CORE_START */
+const CATEGORIES=[
+  ['dates','日付'],['times','時刻'],['prices','料金'],['urls','URL'],['phones','電話番号'],['capacities','定員・人数']
+];
+function unique(values){return [...new Set(values)].sort((a,b)=>a.localeCompare(b,'ja'));}
+function normalizeDigits(text){return text.normalize('NFKC').replace(/[，、]/g,',');}
+function extractAll(source){
+  const text=normalizeDigits(source);
+  const dates=[],times=[],prices=[],urls=[],phones=[],capacities=[],weekdays=[];
+  const dm=/(?:\b(20\d{2})\s*[年\/.-]\s*)?(1[0-2]|0?[1-9])\s*[月\/.-]\s*(3[01]|[12]\d|0?[1-9])\s*日?\s*(?:[（(]\s*([日月火水木金土])\s*(?:曜(?:日)?)?\s*[)）])?/g;
+  for(const m of text.matchAll(dm)){
+    const year=m[1]?Number(m[1]):null,mo=Number(m[2]),day=Number(m[3]);
+    if(year){const d=new Date(Date.UTC(year,mo-1,day));if(d.getUTCFullYear()!==year||d.getUTCMonth()!==mo-1||d.getUTCDate()!==day)continue;}
+    else if(day>new Date(Date.UTC(2024,mo,0)).getUTCDate())continue;
+    const key=(year?year+'-':'')+String(mo).padStart(2,'0')+'-'+String(day).padStart(2,'0');dates.push(key);
+    if(year&&m[4]){const expected='日月火水木金土'[new Date(Date.UTC(year,mo-1,day)).getUTCDay()];if(expected!==m[4])weekdays.push({written:m[0].trim(),correct:expected+'曜日'});}
+  }
+  for(const m of text.matchAll(/(?<![\d])([01]?\d|2[0-3])\s*(?::|時)\s*([0-5]\d)?\s*(?:分)?(?!\d)/g)){
+    if(!m[0].includes(':')&&!m[0].includes('時'))continue;
+    const hour=Number(m[1]),minute=m[2]?Number(m[2]):0;times.push(String(hour).padStart(2,'0')+':'+String(minute).padStart(2,'0'));
+  }
+  for(const m of text.matchAll(/(?:[¥￥]\s*([\d,]+)|([\d,]+)\s*円)/g)){const n=Number((m[1]||m[2]).replace(/,/g,''));if(Number.isSafeInteger(n))prices.push(n+'円');}
+  if(/(?:参加費|入場料|料金|価格)\s*(?:は|:|：)?\s*無料/.test(text))prices.push('0円');
+  for(const m of text.matchAll(/https?:\/\/[^\s<>"'「」『』（）()]+/gi)){urls.push(m[0].replace(/[.,。!！?？、;；]+$/u,''));}
+  for(const m of text.matchAll(/(?<!\d)(0\d{1,4}[-\s]\d{1,4}[-\s]\d{3,4})(?!\d)/g)){const count=m[1].replace(/\D/g,'').length;if(count>=10&&count<=11)phones.push(m[1].replace(/[\s]/g,'-'));}
+  for(const m of text.matchAll(/(?:定員|先着|募集人数|参加者)\s*(?:は|:|：)?\s*([\d,]+)\s*(?:名|人|席)/g)){capacities.push(Number(m[1].replace(/,/g,''))+'人');}
+  return {dates:unique(dates),times:unique(times),prices:unique(prices),urls:unique(urls),phones:unique(phones),capacities:unique(capacities),weekdays};
+}
+function compareFacts(source,target){
+  const a=extractAll(source),b=extractAll(target),issues=[];
+  for(const [key,label] of CATEGORIES){
+    const left=a[key],right=b[key];if(!left.length&&!right.length)continue;
+    if(!left.length){issues.push({kind:'review',label,detail:'比較元に情報がありません。告知文: '+right.join(' / ')});continue;}
+    if(!right.length){issues.push({kind:'review',label,detail:'告知文側で見つかりません。確定版: '+left.join(' / ')});continue;}
+    if(left.join('|')===right.join('|'))issues.push({kind:'ok',label,detail:left.join(' / ')});
+    else issues.push({kind:'bad',label,detail:'確定版: '+left.join(' / ')+'　／　告知文: '+right.join(' / ')});
+  }
+  for(const w of a.weekdays){issues.push({kind:'bad',label:'確定版の曜日',detail:'「'+w.written+'」は'+w.correct+'ではありません。元資料を確認してください。'});}
+  for(const w of b.weekdays){issues.push({kind:'bad',label:'告知文の曜日',detail:'「'+w.written+'」は'+w.correct+'ではありません。'});}
+  if(!issues.length)issues.push({kind:'review',label:'比較できる項目なし',detail:'日付・時刻・料金・URL・電話番号・定員の形式で情報を記入してください。'});
+  return issues;
+}
+/* CORE_END */
+const $=id=>document.getElementById(id);
+function closeNav(){ $('navPanel').hidden=true;$('navToggle').setAttribute('aria-expanded','false'); }
+$('navToggle').addEventListener('click',()=>{const next=$('navPanel').hidden;$('navPanel').hidden=!next;$('navToggle').setAttribute('aria-expanded',String(next));});
+document.addEventListener('click',e=>{if(!e.target.closest('.nav'))closeNav();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeNav();});
+let lastReport='';
+$('compare').addEventListener('click',()=>{
+  const src=$('source').value.trim(),dst=$('target').value.trim();$('findings').replaceChildren();$('copy').disabled=true;lastReport='';
+  if(!src||!dst){$('status').textContent='確定版と告知文の両方を入力してください。';return;}
+  const issues=compareFacts(src,dst),bad=issues.filter(x=>x.kind==='bad').length,review=issues.filter(x=>x.kind==='review').length,ok=issues.filter(x=>x.kind==='ok').length;
+  $('status').textContent=bad+'件の食い違い・曜日の問題 / '+review+'件の要確認 / '+ok+'件の一致。自動判定できない項目は必ず目視確認してください。';
+  const labels={bad:'食い違い・問題',review:'要確認',ok:'一致'};
+  for(const entry of issues){const item=document.createElement('div');item.className='finding '+(entry.kind==='bad'?'bad':entry.kind==='ok'?'good':'');const h=document.createElement('strong');h.textContent=labels[entry.kind]+'：'+entry.label;const body=document.createElement('div');body.className='small';body.textContent=entry.detail;item.append(h,body);$('findings').append(item);}
+  lastReport='【告知ちがいチェッカー】\n'+$('status').textContent+'\n'+issues.map(x=>'・'+labels[x.kind]+'｜'+x.label+'｜'+x.detail).join('\n')+'\n※自動検査は限定的です。最終確認は人が行ってください。';$('copy').disabled=false;$('copy').textContent='結果をコピー';
+});
+$('demo').addEventListener('click',()=>{
+  $('source').value='秋の体験教室は2026年10月24日（土）13:00〜15:30、参加費500円、定員20名。申込先 https://example.org/event です。';
+  $('target').value='10/25(日)に秋の体験教室！ 時間は13:00〜15:30。参加費は無料、先着20名。詳細 https://example.org/event へ！';
+  $('compare').click();
+});
+$('clear').addEventListener('click',()=>{$('source').value='';$('target').value='';$('findings').replaceChildren();$('status').textContent='文章を入力して「食い違いをチェック」を押してください。';$('copy').disabled=true;lastReport='';});
+$('copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(lastReport);$('copy').textContent='コピーしました';}catch{ $('copy').textContent='コピーできません。結果を選択してコピーしてください。'; }});
+</script></body></html>
