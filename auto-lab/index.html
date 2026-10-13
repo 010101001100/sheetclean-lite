@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#152d32">
+<meta name="description" content="毎日3回、実務の面倒を減らすアイデアからAIが試作品を自動生成。静的検証とブラウザテストを通過したものだけを表示する実験室。">
+<title>AIツール実験室 | Tiny Tools</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif;color:#223438;background:#f5f8f6}*{box-sizing:border-box}body{margin:0;line-height:1.7}a{color:#126b61}a:focus-visible,button:focus-visible{outline:3px solid #e6ae42;outline-offset:3px}.top{background:#142e35;color:white}.top-inner{max-width:1040px;margin:auto;padding:16px 22px;display:flex;justify-content:space-between;gap:15px;align-items:center}.top-inner a{color:white;text-decoration:none;font-weight:750}.top-inner nav{display:flex;gap:17px;font-size:.83rem}.hero{background:linear-gradient(135deg,#e7f7eb,#ecf5f6);border-bottom:1px solid #d9e8e2}.wrap{max-width:1040px;margin:auto;padding-left:22px;padding-right:22px}.hero .wrap{padding-top:58px;padding-bottom:53px}.kicker{font-weight:850;font-size:.76rem;letter-spacing:.11em;color:#137c68}.hero h1{font-size:clamp(2.1rem,5.1vw,3.8rem);line-height:1.2;letter-spacing:-.05em;margin:13px 0 16px}.hero h1 em{color:#13776a;font-style:normal}.hero p{max-width:700px;color:#456267;margin:0;font-size:1rem}.pills{display:flex;flex-wrap:wrap;gap:9px;margin-top:19px}.pill{border:1px solid #c9e1d8;background:white;color:#3b6861;border-radius:50px;padding:4px 13px;font-size:.76rem;font-weight:750}main{padding-top:30px;padding-bottom:65px}.notice{padding:16px 19px;border:1px solid #e9d4a7;background:#fffaf0;border-radius:14px;font-size:.86rem;color:#775b2b;line-height:1.85}.section-title{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:end;margin:36px 0 16px}.section-title h2{margin:0;font-size:1.35rem}.section-title span{font-size:.78rem;color:#60747a}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}.card{display:flex;flex-direction:column;padding:22px 20px;background:white;border:1px solid #d9e5df;border-radius:16px;box-shadow:0 8px 20px #102c2710;min-height:220px}.number{font-size:.71rem;letter-spacing:.08em;color:#198271;font-weight:820}.card h3{font-size:1.13rem;line-height:1.45;overflow-wrap:anywhere;margin:12px 0 6px}.card p{font-size:.76rem;color:#63757a;margin:0 0 16px}.card a{margin-top:auto;align-self:start;text-decoration:none;font-weight:800;font-size:.87rem;padding:9px 14px;border-radius:9px;background:#126b61;color:white}.card a:hover{background:#075549}.state{grid-column:1/-1;background:white;border:1px solid #d9e5df;border-radius:15px;padding:32px 24px;text-align:center;color:#617379}.state strong{display:block;font-size:1.05rem;color:#20383b;margin-bottom:5px}footer{max-width:1040px;padding:0 22px 35px;margin:auto;color:#687e7a;font-size:.77rem}@media(max-width:820px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:580px){.cards{grid-template-columns:1fr}.hero .wrap{padding-top:35px;padding-bottom:35px}.wrap,.top-inner{padding-left:16px;padding-right:16px}.top-inner nav{gap:10px}.card{min-height:190px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-inner"><a href="../apps/">✦ Tiny Tools</a><nav aria-label="サイトメニュー"><a href="../">CSV整理</a><a href="../apps/">ツール一覧</a></nav></div></header>
+<section class="hero"><div class="wrap"><div class="kicker">AUTO DEV LAB · EXPERIMENTAL</div><h1>人の「面倒」を減らす。<br><em>AIツール実験室。</em></h1><p>毎日3回、データの照合・矛盾の発見・要確認リストの作成など、手作業で時間を取られる小さな課題に挑戦。AIが試作品を作り、テストを通ったものをここに並べます。</p><div class="pills"><span class="pill">09:30 / 15:30 / 21:30 JSTを予定</span><span class="pill">登録不要</span><span class="pill">合格した試作品だけ掲載</span></div></div></section>
+<main class="wrap">
+<div class="notice"><strong>ここは実験室です。</strong> 生成したアプリはHTMLの静的検証と簡易ブラウザテストを通していますが、結果の正確さや安全性・他社との差別化・需要は保証していません。大切な個人情報や実業務データは入れず、架空のサンプルでお試しください。生成・テストに失敗した回は掲載されません。</div>
+<div class="section-title"><h2>自動生成した試作品</h2><span id="count">読み込み中…</span></div>
+<div id="items" class="cards" aria-live="polite"><div class="state">一覧を読み込んでいます…</div></div>
+</main>
+<footer>Tiny Tools · 実験室は通常の公開ツールと区別しています。<a href="../apps/">安定版ツール一覧はこちら →</a></footer>
+<script>
+(async()=>{
+'use strict';
+const box=document.getElementById('items'),count=document.getElementById('count');
+const state=(head,body)=>{box.replaceChildren();const e=document.createElement('div');e.className='state';const h=document.createElement('strong');h.textContent=head;e.append(h,document.createTextNode(body));box.append(e);};
+try{
+ const res=await fetch('./index.json',{cache:'no-store'});
+ if(!res.ok)throw Error('一覧を取得できません');
+ const records=await res.json();
+ if(!Array.isArray(records))throw Error('一覧が不正です');
+ count.textContent=records.length+'件の試作品';
+ if(!records.length){state('まだ公開された試作品はありません','次のスケジュール実行で、検証を通過したアプリが追加されます。');return;}
+ box.replaceChildren();
+ for(const item of records){
+  if(typeof item.title!=='string'||typeof item.url!=='string'||!/^builds\/run-[0-9]+-[0-9]+\/$/.test(item.url))continue;
+  const article=document.createElement('article');article.className='card';
+  const tag=document.createElement('div');tag.className='number';tag.textContent='AUTO-GENERATED / TESTED';
+  const title=document.createElement('h3');title.textContent=item.title;
+  const info=document.createElement('p');const dt=new Date(item.created_at);info.textContent=Number.isNaN(dt.valueOf())?'試作品':dt.toLocaleString('ja-JP',{timeZone:'Asia/Tokyo',dateStyle:'medium',timeStyle:'short'})+' 作成';
+  const link=document.createElement('a');link.href=item.url;link.textContent='試作品を開く ↗';
+  article.append(tag,title,info,link);box.append(article);
+ }
+ if(!box.children.length)state('掲載できるデータがありません','データを確認して、しばらくしてからもう一度お試しください。');
+}catch(error){count.textContent='取得できませんでした';state('読み込みに失敗しました','通信環境を確認して再読み込みしてください。');}
+})();
+</script>
+</body>
+</html>
