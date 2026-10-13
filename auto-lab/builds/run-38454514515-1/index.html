@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>複数見積CSV比較ツール</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --border: #cbd5e1;
+      --accent-warn-bg: #fef3c7;
+      --accent-warn-text: #92400e;
+      --accent-diff-bg: #fee2e2;
+      --accent-diff-text: #991b1b;
+      --success: #16a34a;
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      margin: 0;
+      padding: 16px;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    header {
+      max-width: 1200px;
+      margin: 0 auto 20px auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      color: var(--primary);
+    }
+    p.desc {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    h2 {
+      margin-top: 0;
+      font-size: 1.1rem;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    @media (min-width: 768px) {
+      .grid-2 { grid-template-columns: 1fr 1fr; }
+    }
+    .file-drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+      background: #f1f5f9;
+      position: relative;
+    }
+    .file-drop-zone input[type="file"] {
+      margin-top: 8px;
+      width: 100%;
+    }
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .btn:hover { background: var(--primary-hover); }
+    .btn-secondary {
+      background: #e2e8f0;
+      color: var(--text);
+    }
+    .btn-secondary:hover { background: #cbd5e1; }
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    textarea.csv-input {
+      width: 100%;
+      height: 100px;
+      font-family: monospace;
+      font-size: 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px;
+      resize: vertical;
+    }
+    .controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .error-box {
+      background: var(--accent-diff-bg);
+      color: var(--accent-diff-text);
+      padding: 12px;
+      border-radius: var(--radius);
+      border: 1px solid #fecaca;
+      margin-bottom: 12px;
+      white-space: pre-wrap;
+      font-size: 0.9rem;
+    }
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+    th, td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+    th:last-child, td:last-child {
+      border-right: none;
+    }
+    th {
+      background: #f1f5f9;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      font-size: 0.75rem;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .badge-warn {
+      background: var(--accent-warn-bg);
+      color: var(--accent-warn-text);
+    }
+    .badge-ok {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .badge-diff {
+      background: var(--accent-diff-bg);
+      color: var(--accent-diff-text);
+    }
+    .legend {
+      display: flex;
+      gap: 16px;
+      font-size: 0.85rem;
+      margin-bottom: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>複数見積CSV比較ツール</h1>
+  <p class="desc">品目コードを基準に複数社の見積データを横断比較。単位違いや単価・総額の差異、数量の食い違いを自動検出し、誤認を防ぎます。</p>
+</header>
+
+<main>
+  <!-- 入力セクション -->
+  <section class="card">
+    <h2>
+      <span>見積データの入力</span>
+      <button type="button" id="loadSampleBtn" class="btn btn-secondary">架空の2社サンプルをロード</button>
+    </h2>
+    <p class="desc" style="margin-bottom: 12px;">
+      必須カラム: <code>品目コード</code>, <code>品目名</code>, <code>数量</code>, <code>単位</code>, <code>単価</code>（または <code>総額</code>）<br>
+      ※Shift-JISまたはUTF-8のCSVファイルを読み込めます（直接テキスト貼付も可）。
+    </p>
+
+    <div id="errorContainer" style="display: none;" class="error-box"></div>
+
+    <div class="grid-2" id="vendorInputsContainer">
+      <!-- 見積1 -->
+      <div class="file-drop-zone" data-index="0">
+        <strong>見積書 A（例: A社）</strong>
+        <div style="margin-top: 8px;">
+          <input type="text" id="vendorName0" value="A社見積" placeholder="会社名" style="width:100%; padding:6px; margin-bottom:8px; border:1px solid var(--border); border-radius:4px;">
+        </div>
+        <input type="file" id="file0" accept=".csv,.txt">
+        <textarea id="csvText0" class="csv-input" placeholder="CSVテキストを直接貼り付け..."></textarea>
+      </div>
+
+      <!-- 見積2 -->
+      <div class="file-drop-zone" data-index="1">
+        <strong>見積書 B（例: B社）</strong>
+        <div style="margin-top: 8px;">
+          <input type="text" id="vendorName1" value="B社見積" placeholder="会社名" style="width:100%; padding:6px; margin-bottom:8px; border:1px solid var(--border); border-radius:4px;">
+        </div>
+        <input type="file" id="file1" accept=".csv,.txt">
+        <textarea id="csvText1" class="csv-input" placeholder="CSVテキストを直接貼り付け..."></textarea>
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button type="button" id="addVendorBtn" class="btn btn-secondary">+ 見積書を追加 (最大4社)</button>
+      <button type="button" id="compareBtn" class="btn">比較を実行</button>
+    </div>
+  </section>
+
+  <!-- 結果セクション -->
+  <section class="card" id="resultSection" style="display: none;">
+    <h2>
+      <span>比較結果・分析</span>
+      <button type="button" id="exportBtn" class="btn btn-secondary">結果をCSVエクスポート</button>
+    </h2>
+
+    <div class="legend">
+      <div class="legend-item"><span class="badge badge-warn">要確認</span> 単位違い / 数量不一致 / 単価不明</div>
+      <div class="legend-item"><span class="badge badge-diff">最安値差異</span> 複数社間で最安値に差がある品目</div>
+      <div class="legend-item"><span class="badge badge-ok">一致・妥当</span> 問題なし</div>
+    </div>
+
+    <!-- サマリーカード -->
+    <div id="summaryBox" style="margin-bottom: 16px; font-size: 0.95rem; font-weight: bold;"></div>
+
+    <div class="table-container">
+      <table id="resultTable">
+        <thead id="resultHead"></thead>
+        <tbody id="resultBody"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+(function() {
+  'use strict';
+
+  // サンプルデータ
+  const sampleDataA = `品目コード,品目名,数量,単位,単価
+PC-001,ビジネスノートPC,10,台,120000
+MN-024,27インチモニター,20,台,35000
+CB-999,USB-Cケーブル 1m,50,本,1500
+SW-010,法人向けアンチウイルス(1年),100,ライセンス,5000`;
+
+  const sampleDataB = `品目コード,品目名,数量,単位,単価
+PC-001,標準ノートパソコン,10,台,115000
+MN-024,27型液晶ディスプレイ,20,台,36000
+CB-999,Type-Cケーブル(箱),10,箱,7000
+SW-010,セキュリティソフト 1年版,100,ID,4800`;
+
+  let vendorCount = 2;
+
+  // CSVパルパー (RFC4180準拠 + クォート対応)
+  function parseCSV(text) {
+    const lines = [];
+    let row = [''];
+    let inQuotes = false;
+    let i = 0;
+
+    while (i < text.length) {
+      let c = text[i];
+      let nextC = text[i+1];
+
+      if (inQuotes) {
+        if (c === '"' && nextC === '"') {
+          row[row.length - 1] += '"';
+          i += 2;
+        } else if (c === '"') {
+          inQuotes = false;
+          i++;
+        } else {
+          row[row.length - 1] += c;
+          i++;
+        }
+      } else {
+        if (c === '"') {
+          inQuotes = true;
+          i++;
+        } else if (c === ',') {
+          row.push('');
+          i++;
+        } else if (c === '\r' && nextC === '\n') {
+          lines.push(row);
+          row = [''];
+          i += 2;
+        } else if (c === '\n' || c === '\r') {
+          lines.push(row);
+          row = [''];
+          i++;
+        } else {
+          row[row.length - 1] += c;
+          i++;
+        }
+      }
+    }
+    if (row.length > 1 || row[0] !== '') {
+      lines.push(row);
+    }
+
+    // 空行フィルター
+    return lines.filter(l => l.length > 0 && !(l.length === 1 && l[0].trim() === ''));
+  }
+
+  // DOM要素
+  const errorContainer = document.getElementById('errorContainer');
+  const vendorInputsContainer = document.getElementById('vendorInputsContainer');
+  const addVendorBtn = document.getElementById('addVendorBtn');
+  const loadSampleBtn = document.getElementById('loadSampleBtn');
+  const compareBtn = document.getElementById('compareBtn');
+  const resultSection = document.getElementById('resultSection');
+  const resultHead = document.getElementById('resultHead');
+  const resultBody = document.getElementById('resultBody');
+  const summaryBox = document.getElementById('summaryBox');
+  const exportBtn = document.getElementById('exportBtn');
+
+  // ファイル読込イベントハンドラ設定
+  function bindFileInput(zoneEl) {
+    const fileInput = zoneEl.querySelector('input[type="file"]');
+    const textArea = zoneEl.querySelector('textarea');
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      // Shift-JIS考慮しつつutf-8で読込。文字化け時はテキストエリアに手動貼付可能
+      reader.onload = (evt) => {
+        textArea.value = evt.target.result;
+      };
+      reader.readAsText(file, 'utf-8');
+    });
+  }
+
+  // 初期ファイルドロップゾーンのバインド
+  document.querySelectorAll('.file-drop-zone').forEach(bindFileInput);
+
+  // ベンダー追加
+  addVendorBtn.addEventListener('click', () => {
+    if (vendorCount >= 4) {
+      alert('最大4社まで比較可能です。');
+      return;
+    }
+    const idx = vendorCount++;
+    const div = document.createElement('div');
+    div.className = 'file-drop-zone';
+    div.setAttribute('data-index', idx);
+    div.innerHTML = `
+      <strong>見積書 ${String.fromCharCode(65 + idx)}（例: ${String.fromCharCode(65 + idx)}社）</strong>
+      <div style="margin-top: 8px;">
+        <input type="text" id="vendorName${idx}" value="${String.fromCharCode(65 + idx)}社見積" placeholder="会社名" style="width:100%; padding:6px; margin-bottom:8px; border:1px solid var(--border); border-radius:4px;">
+      </div>
+      <input type="file" id="file${idx}" accept=".csv,.txt">
+      <textarea id="csvText${idx}" class="csv-input" placeholder="CSVテキストを直接貼り付け..."></textarea>
+      <div style="margin-top:4px; text-align:right;"><button type="button" class="btn btn-secondary remove-vendor-btn" style="padding:2px 6px; font-size:0.75rem;">削除</button></div>
+    `;
+    vendorInputsContainer.appendChild(div);
+    bindFileInput(div);
+
+    div.querySelector('.remove-vendor-btn').addEventListener('click', () => {
+      div.remove();
+      vendorCount--;
+    });
+  });
+
+  // サンプルロード
+  loadSampleBtn.addEventListener('click', () => {
+    // 2社にリセット
+    vendorInputsContainer.innerHTML = `
+      <div class="file-drop-zone" data-index="0">
+        <strong>見積書 A（例: A社）</strong>
+        <div style="margin-top: 8px;"><input type="text" id="vendorName0" value="A社" style="width:100%; padding:6px; margin-bottom:8px; border:1px solid var(--border); border-radius:4px;"></div>
+        <input type="file" id="file0" accept=".csv,.txt">
+        <textarea id="csvText0" class="csv-input"></textarea>
+      </div>
+      <div class="file-drop-zone" data-index="1">
+        <strong>見積書 B（例: B社）</strong>
+        <div style="margin-top: 8px;"><input type="text" id="vendorName1" value="B社" style="width:100%; padding:6px; margin-bottom:8px; border:1px solid var(--border); border-radius:4px;"></div>
+        <input type="file" id="file1" accept=".csv,.txt">
+        <textarea id="csvText1" class="csv-input"></textarea>
+      </div>
+    `;
+    vendorCount = 2;
+    document.querySelectorAll('.file-drop-zone').forEach(bindFileInput);
+    document.getElementById('vendorName0').value = 'A社';
+    document.getElementById('csvText0').value = sampleDataA;
+    document.getElementById('vendorName1').value = 'B社';
+    document.getElementById('csvText1').value = sampleDataB;
+    errorContainer.style.display = 'none';
+  });
+
+  // エラー表示
+  function showError(msg) {
+    errorContainer.textContent = msg;
+    errorContainer.style.display = 'block';
+    resultSection.style.display = 'none';
+  }
+
+  // 比較ロジック実行
+  let lastComparedResult = null;
+
+  compareBtn.addEventListener('click', () => {
+    errorContainer.style.display = 'none';
+
+    const zones = vendorInputsContainer.querySelectorAll('.file-drop-zone');
+    const vendors = [];
+
+    // 入力収集とバリデーション
+    for (let i = 0; i < zones.length; i++) {
+      const idx = zones[i].getAttribute('data-index');
+      const nameInput = document.getElementById(`vendorName${idx}`);
+      const textInput = document.getElementById(`csvText${idx}`);
+
+      const vName = nameInput ? nameInput.value.trim() || `ベンダー${i+1}` : `ベンダー${i+1}`;
+      const rawText = textInput ? textInput.value.trim() : '';
+
+      if (!rawText) {
+        showError(`エラー: ${vName} のCSVデータが入力されていません。`);
+        return;
+      }
+
+      const rows = parseCSV(rawText);
+      if (rows.length < 2) {
+        showError(`エラー: ${vName} のCSVに有効なデータ行（ヘッダー＋明細）がありません。`);
+        return;
+      }
+
+      const header = rows[0].map(h => h.trim());
+      // カラム名マッピングチェック
+      const codeIdx = header.findIndex(h => h.includes('品目コード') || h.includes('コード') || h.toLowerCase() === 'code');
+      const nameIdx = header.findIndex(h => h.includes('品目名') || h.includes('名称') || h.toLowerCase() === 'name');
+      const qtyIdx = header.findIndex(h => h.includes('数量') || h.toLowerCase() === 'qty' || h.toLowerCase() === 'quantity');
+      const unitIdx = header.findIndex(h => h.includes('単位') || h.toLowerCase() === 'unit');
+      const priceIdx = header.findIndex(h => h.includes('単価') || h.toLowerCase() === 'price');
+      const totalIdx = header.findIndex(h => h.includes('総額') || h.includes('金額') || h.toLowerCase() === 'total');
+
+      if (codeIdx === -1) {
+        showError(`エラー: ${vName} のCSVに「品目コード」列が見つかりません。ヘッダーを確認してください。`);
+        return;
+      }
+      if (qtyIdx === -1) {
+        showError(`エラー: ${vName} のCSVに「数量」列が見つかりません。`);
+        return;
+      }
+      if (priceIdx === -1 && totalIdx === -1) {
+        showError(`エラー: ${vName} のCSVに「単価」または「総額」列のいずれかが必須です。`);
+        return;
+      }
+
+      const itemsMap = new Map();
+      for (let r = 1; r < rows.length; r++) {
+        const row = rows[r];
+        if (!row || row.length <= codeIdx) continue;
+        const code = (row[codeIdx] || '').trim();
+        if (!code) continue;
+
+        if (itemsMap.has(code)) {
+          showError(`エラー: ${vName} 内で品目コード「${code}」が重複しています。同一CSV内での重複コードは許可されません。`);
+          return;
+        }
+
+        const itemName = nameIdx !== -1 && row[nameIdx] !== undefined ? row[nameIdx].trim() : '';
+        const qtyStr = qtyIdx !== -1 && row[qtyIdx] !== undefined ? row[qtyIdx].replace(/,/g, '').trim() : '0';
+        const unit = unitIdx !== -1 && row[unitIdx] !== undefined ? row[unitIdx].trim() : '';
+        const priceStr = priceIdx !== -1 && row[priceIdx] !== undefined ? row[priceIdx].replace(/,/g, '').trim() : '';
+        const totalStr = totalIdx !== -1 && row[totalIdx] !== undefined ? row[totalIdx].replace(/,/g, '').trim() : '';
+
+        const qty = parseFloat(qtyStr);
+        let price = parseFloat(priceStr);
+        let total = parseFloat(totalStr);
+
+        if (isNaN(qty)) {
+          showError(`エラー: ${vName} の品目「${code}」の数量「${qtyStr}」が数値ではありません。`);
+          return;
+        }
+
+        // 単価・総額の相互補完計算
+        if (!isNaN(price) && isNaN(total)) {
+          total = price * qty;
+        } else if (isNaN(price) && !isNaN(total) && qty > 0) {
+          price = total / qty;
+        } else if (isNaN(price)) {
+          price = 0;
+        }
+        if (isNaN(total)) total = 0;
+
+        itemsMap.set(code, {
+          code,
+          name: itemName,
+          qty,
+          unit,
+          price,
+          total
+        });
+      }
+
+      vendors.push({ name: vName, items: itemsMap });
+    }
+
+    if (vendors.length === 0) {
+      showError('有効なベンダーデータがありません。');
+      return;
+    }
+
+    // 品目コードの全社統合リスト作成
+    const allCodesSet = new Set();
+    vendors.forEach(v => {
+      v.items.forEach((_, code) => allCodesSet.add(code));
+    });
+    const allCodes = Array.from(allCodesSet);
+
+    // 比較マトリクス構築
+    const comparisonRows = [];
+    let totalVendorsGrandTotal = {};
+    vendors.forEach(v => totalVendorsGrandTotal[v.name] = 0);
+
+    allCodes.forEach(code => {
+      // 品目名や単位の揺れ・確認事項の検出
+      let canonicalName = '';
+      let units = new Set();
+      let qtys = new Set();
+      let hasUnitDiff = false;
+      let hasQtyDiff = false;
+
+      vendors.forEach(v => {
+        const item = v.items.get(code);
+        if (item) {
+          if (!canonicalName && item.name) canonicalName = item.name;
+          if (item.unit) units.add(item.unit);
+          qtys.add(item.qty);
+        }
+      });
+
+      if (units.size > 1) hasUnitDiff = true;
+      if (qtys.size > 1) hasQtyDiff = true;
+
+      // 各社のデータ収集
+      const vendorData = {};
+      let validPrices = [];
+
+      vendors.forEach(v => {
+        const item = v.items.get(code);
+        if (item) {
+          vendorData[v.name] = item;
+          if (item.price > 0 && !hasUnitDiff) {
+            validPrices.push({ vendor: v.name, price: item.price, total: item.total });
+          }
+          totalVendorsGrandTotal[v.name] += item.total;
+        } else {
+          vendorData[v.name] = null;
+        }
+      });
+
+      // 最安値判定 (単位違いや数量違いがある場合は「要確認」とするため純粋な最安値比較から除外または注意喚起)
+      let cheapestVendor = null;
+      if (!hasUnitDiff && validPrices.length > 0) {
+        validPrices.sort((a, b) => a.price - b.price);
+        cheapestVendor = validPrices[0].vendor;
+      }
+
+      comparisonRows.push({
+        code,
+        name: canonicalName || '(名称なし)',
+        units: Array.from(units).join('/'),
+        hasUnitDiff,
+        hasQtyDiff,
+        vendorData,
+        cheapestVendor,
+        validPrices
+      });
+    });
+
+    lastComparedResult = { vendors, comparisonRows, totalVendorsGrandTotal };
+    renderResults(lastComparedResult);
+  });
+
+  // 結果描画
+  function renderResults(result) {
+    const { vendors, comparisonRows, totalVendorsGrandTotal } = result;
+
+    resultSection.style.display = 'block';
+
+    // サマリー表示
+    let summaryHtml = '見積総額比較: ';
+    const totalsArr = vendors.map(v => ({ name: v.name, total: totalVendorsGrandTotal[v.name] }));
+    totalsArr.sort((a, b) => a.total - b.total);
+
+    summaryHtml += totalsArr.map((t, idx) => `<strong>${t.name}</strong>: ¥${t.total.toLocaleString()}${idx === 0 ? ' <span class="badge badge-ok">最安総額</span>' : ''}`).join(' ｜ ');
+    summaryBox.innerHTML = summaryHtml;
+
+    // テーブルヘッダー作成
+    let headHtml = `<tr>
+      <th>品目コード</th>
+      <th>品目名</th>`;
+    
+    vendors.forEach(v => {
+      headHtml += `<th class="text-right">${escapeHTML(v.name)}<br><small style="font-weight:normal;">数量 / 単位 / 単価 / 総額</small></th>`;
+    });
+    headHtml += `<th>判定・備考</th></tr>`;
+    resultHead.innerHTML = headHtml;
+
+    // テーブルボディ作成
+    let bodyHtml = '';
+    comparisonRows.forEach(row => {
+      bodyHtml += `<tr>`;
+      bodyHtml += `<td><code>${escapeHTML(row.code)}</code></td>`;
+      bodyHtml += `<td>${escapeHTML(row.name)}</td>`;
+
+      let warnings = [];
+      if (row.hasUnitDiff) warnings.push('単位違い');
+      if (row.hasQtyDiff) warnings.push('数量不一致');
+
+      vendors.forEach(v => {
+        const item = row.vendorData[v.name];
+        if (!item) {
+          bodyHtml += `<td class="text-center text-muted">（未見積）</td>`;
+        } else {
+          let isCheapest = (row.cheapestVendor === v.name);
+          let styleClass = isCheapest ? 'background: #f0fdf4;' : '';
+          bodyHtml += `<td class="text-right" style="${styleClass}">
+            ${item.qty} ${escapeHTML(item.unit)}<br>
+            単価: ¥${item.price.toLocaleString()}<br>
+            <strong>総額: ¥${item.total.toLocaleString()}</strong>
+            ${isCheapest ? '<br><span class="badge badge-ok">最安</span>' : ''}
+          </td>`;
+        }
+      });
+
+      // 判定列
+      bodyHtml += `<td>`;
+      if (row.hasUnitDiff) {
+        warnings.push('【注意】単位が業者間で異なります。単価・数量をそのまま比較せず要確認');
+      }
+      if (row.hasQtyDiff) {
+        warnings.push('数量が業者間で一致していません');
+      }
+
+      if (warnings.length > 0) {
+        bodyHtml += `<span class="badge badge-warn">${warnings.join(' / ')}</span>`;
+      } else {
+        bodyHtml += `<span class="badge badge-ok">問題なし</span>`;
+      }
+      bodyHtml += `</td>`;
+
+      bodyHtml += `</tr>`;
+    });
+
+    resultBody.innerHTML = bodyHtml;
+  }
+
+  // HTMLエスケープヘルパー
+  function escapeHTML(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  // CSVエクスポート
+  exportBtn.addEventListener('click', () => {
+    if (!lastComparedResult) return;
+    const { vendors, comparisonRows, totalVendorsGrandTotal } = lastComparedResult;
+
+    let csvContent = '\uFEFF'; // BOM for Excel
+    // ヘッダー行
+    let headers = ['品目コード', '品目名', '判定'];
+    vendors.forEach(v => {
+      headers.push(`${v.name}_数量`, `${v.name}_単位`, `${v.name}_単価`, `${v.name}_総額`);
+    });
+    csvContent += headers.map(escapeCSVCell).join(',') + '\r\n';
+
+    // データ行
+    comparisonRows.forEach(row => {
+      let status = '問題なし';
+      if (row.hasUnitDiff) status = '要確認(単位違い)';
+      else if (row.hasQtyDiff) status = '要確認(数量不一致)';
+
+      let line = [row.code, row.name, status];
+      vendors.forEach(v => {
+        const item = row.vendorData[v.name];
+        if (item) {
+          line.push(item.qty, item.unit, item.price, item.total);
+        } else {
+          line.push('', '', '', '');
+        }
+      });
+      csvContent += line.map(escapeCSVCell).join(',') + '\r\n';
+    });
+
+    // 総額行
+    let totalLine = ['総額合計', '', ''];
+    vendors.forEach(v => {
+      totalLine.push('', '', '', totalVendorsGrandTotal[v.name]);
+    });
+    csvContent += totalLine.map(escapeCSVCell).join(',') + '\r\n';
+
+    // ダウンロードトリガー
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `見積比較結果_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  function escapeCSVCell(val) {
+    if (val === null || val === undefined) return '""';
+    const str = String(val);
+    if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+      return '"' + str.replace(/"/g, '""') + '"';
+    }
+    return '"' + str + '"';
+  }
+
+})();
+</script>
+
+</body>
+</html>
