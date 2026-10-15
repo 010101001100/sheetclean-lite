@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>配送データ照合ツール</title>
+<style>
+:root {
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --success: #16a34a;
+  --border: #cbd5e1;
+  --radius: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+body { background: var(--bg); color: var(--text); line-height: 1.5; padding: 16px; }
+.container { max-width: 1000px; margin: 0 auto; }
+header { margin-bottom: 20px; text-align: center; }
+h1 { font-size: 1.5rem; margin-bottom: 4px; }
+p.subtitle { color: var(--text-muted); font-size: 0.875rem; }
+
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+h2 { font-size: 1.1rem; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+
+.file-group { display: flex; flex-direction: column; gap: 6px; }
+label { font-size: 0.85rem; font-weight: bold; color: var(--text-muted); }
+input[type="file"] { font-size: 0.85rem; padding: 6px; border: 1px dashed var(--border); border-radius: 4px; background: #fff; cursor: pointer; }
+textarea { width: 100%; height: 100px; font-family: monospace; font-size: 0.8rem; padding: 8px; border: 1px solid var(--border); border-radius: 4px; resize: vertical; }
+
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+button { background: var(--primary); color: white; border: none; padding: 8px 16px; font-size: 0.9rem; font-weight: bold; border-radius: 4px; cursor: pointer; transition: background 0.2s; }
+button:hover { background: var(--primary-hover); }
+button.secondary { background: #475569; }
+button.secondary:hover { background: #334155; }
+button.outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+button.outline:hover { background: #eff6ff; }
+
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; margin-bottom: 16px; }
+.stat-card { background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 12px; text-align: center; }
+.stat-card .num { font-size: 1.5rem; font-weight: bold; }
+.stat-card.danger .num { color: var(--danger); }
+.stat-card.warning .num { color: var(--warning); }
+.stat-card.success .num { color: var(--success); }
+.stat-card .label { font-size: 0.75rem; color: var(--text-muted); }
+
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 12px; flex-wrap: wrap; }
+.tab { padding: 8px 12px; font-size: 0.85rem; font-weight: bold; cursor: pointer; border: 1px solid transparent; border-bottom: none; border-radius: 4px 4px 0 0; background: #e2e8f0; color: var(--text-muted); }
+.tab.active { background: #fff; color: var(--text); border-color: var(--border); border-bottom-color: #fff; margin-bottom: -1px; }
+
+.table-container { overflow-x: auto; max-height: 400px; border: 1px solid var(--border); border-radius: 4px; }
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; background: #fff; }
+th, td { padding: 8px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+th { background: #f1f5f9; position: sticky; top: 0; z-index: 1; }
+tr:hover td { background: #f8fafc; }
+
+.badge { display: inline-block; padding: 2px 6px; font-size: 0.75rem; font-weight: bold; border-radius: 4px; }
+.badge.danger { background: #fee2e2; color: var(--danger); }
+.badge.warning { background: #fef3c7; color: var(--warning); }
+.badge.info { background: #e0f2fe; color: var(--primary); }
+
+.log-box { font-family: monospace; font-size: 0.8rem; background: #1e293b; color: #e2e8f0; padding: 10px; border-radius: 4px; max-height: 120px; overflow-y: auto; margin-top: 8px; }
+.note { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>配送データ照合ツール</h1>
+    <p class="subtitle">配送予定CSVと配達完了CSVを突き合わせ、未完了や重複行を検出します（ブラウザ内処理・完全オフライン）</p>
+  </header>
+
+  <div class="card">
+    <h2>1. データ入力</h2>
+    <div class="grid">
+      <div class="file-group">
+        <label for="planFile">配送予定CSVファイル</label>
+        <input type="file" id="planFile" accept=".csv,.txt">
+        <label for="planText">またはテキスト貼付け</label>
+        <textarea id="planText" placeholder="追跡番号,予定日,宛先..."></textarea>
+      </div>
+      <div class="file-group">
+        <label for="completeFile">配達完了CSVファイル</label>
+        <input type="file" id="completeFile" accept=".csv,.txt">
+        <label for="completeText">またはテキスト貼付け</label>
+        <textarea id="completeText" placeholder="追跡番号,完了日時..."></textarea>
+      </div>
+    </div>
+    <div class="actions">
+      <button id="runBtn">照合を実行</button>
+      <button id="sampleBtn" class="secondary">架空サンプルをロード</button>
+      <button id="clearBtn" class="outline">クリア</button>
+    </div>
+    <div id="logArea" class="log-box hidden"></div>
+  </div>
+
+  <div id="resultCard" class="card hidden">
+    <h2>2. 照合結果サマリー
+      <button id="exportBtn" class="outline" style="font-size:0.8rem; padding:4px 8px;">結果をCSVエクスポート</button>
+    </h2>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="num" id="statPlan">0</div>
+        <div class="label">予定データ総数 (有効行)</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="statComplete">0</div>
+        <div class="label">完了データ総数 (有効行)</div>
+      </div>
+      <div class="stat-card danger">
+        <div class="num" id="statOverdue">0</div>
+        <div class="label">予定日超過・未完了</div>
+      </div>
+      <div class="stat-card warning">
+        <div class="num" id="statMissing">0</div>
+        <div class="label">完了記録なし (当日内含む)</div>
+      </div>
+      <div class="stat-card warning">
+        <div class="num" id="statDupPlan">0</div>
+        <div class="label">予定データの重複追跡番号</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" data-target="tabOverdue">予定日超過・未完了 (<span id="cntOverdue">0</span>)</div>
+      <div class="tab" data-target="tabMissing">完了記録なし (<span id="cntMissing">0</span>)</div>
+      <div class="tab" data-target="tabDupPlan">予定重複行 (<span id="cntDupPlan">0</span>)</div>
+      <div class="tab" data-target="tabDupComp">完了重複行 (<span id="cntDupComp">0</span>)</div>
+      <div class="tab" data-target="tabAll">照合マスター一覧 (<span id="cntAll">0</span>)</div>
+    </div>
+
+    <div id="tabOverdue" class="tab-content">
+      <p class="note">予定日が現在日時より前であるにもかかわらず、完了記録が見当たらないデータです。原因の決めつけ（紛失・遅配・スキャン漏れ等）は行いません。</p>
+      <div class="table-container"><table id="tableOverdue"><thead></thead><tbody></tbody></table></div>
+    </div>
+    <div id="tabMissing" class="tab-content hidden">
+      <p class="note">配送予定はあるが、完了データがまだアップロードされていないデータです。</p>
+      <div class="table-container"><table id="tableMissing"><thead></thead><tbody></tbody></table></div>
+    </div>
+    <div id="tabDupPlan" class="tab-content hidden">
+      <p class="note">配送予定CSV内で、同じ追跡番号が複数行にわたって出現するデータです。</p>
+      <div class="table-container"><table id="tableDupPlan"><thead></thead><tbody></tbody></table></div>
+    </div>
+    <div id="tabDupComp" class="tab-content hidden">
+      <p class="note">配達完了CSV内で、同じ追跡番号が複数回記録されているデータです。</p>
+      <div class="table-container"><table id="tableDupComp"><thead></thead><tbody></tbody></table></div>
+    </div>
+    <div id="tabAll" class="tab-content hidden">
+      <p class="note">すべての配送予定データに対する照合ステータス一覧です。</p>
+      <div class="table-container"><table id="tableAll"><thead></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // 状態保持
+  let analysisResult = null;
+
+  // DOM要素
+  const planFile = document.getElementById('planFile');
+  const planText = document.getElementById('planText');
+  const completeFile = document.getElementById('completeFile');
+  const completeText = document.getElementById('completeText');
+  const runBtn = document.getElementById('runBtn');
+  const sampleBtn = document.getElementById('sampleBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const logArea = document.getElementById('logArea');
+  const resultCard = document.getElementById('resultCard');
+  const exportBtn = document.getElementById('exportBtn');
+
+  // イベント登録
+  planFile.addEventListener('change', (e) => handleFileSelect(e, planText));
+  completeFile.addEventListener('change', (e) => handleFileSelect(e, completeText));
+  runBtn.addEventListener('click', runAnalysis);
+  sampleBtn.addEventListener('click', loadSampleData);
+  clearBtn.addEventListener('click', clearAll);
+  exportBtn.addEventListener('click', exportResultsCSV);
+
+  // タブ切り替え
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+      tab.classList.add('active');
+      const targetId = tab.getAttribute('data-target');
+      document.getElementById(targetId).classList.remove('hidden');
+    });
+  });
+
+  function handleFileSelect(event, textareaEl) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      textareaEl.value = e.target.result;
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
+
+  function log(msg, isError = false) {
+    logArea.classList.remove('hidden');
+    const time = new Date().toLocaleTimeString();
+    logArea.textContent += `[${time}] ${msg}\n`;
+    if (isError) {
+      logArea.style.borderColor = 'var(--danger)';
+    }
+    logArea.scrollTop = logArea.scrollHeight;
+  }
+
+  function clearLogs() {
+    logArea.textContent = '';
+    logArea.classList.add('hidden');
+    logArea.style.borderColor = '';
+  }
+
+  function clearAll() {
+    planFile.value = '';
+    planText.value = '';
+    completeFile.value = '';
+    completeText.value = '';
+    clearLogs();
+    resultCard.classList.add('hidden');
+    analysisResult = null;
+  }
+
+  function loadSampleData() {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const pastDate = new Date(Date.now() - 86400000 * 3).toISOString().slice(0, 10);
+    const futureDate = new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 10);
+
+    planText.value = [
+      "追跡番号,予定日,宛先,担当者",
+      `TRK-1001,${pastDate},東京都渋谷区,佐藤`,
+      `TRK-1002,${pastDate},大阪府大阪市,鈴木`,
+      `TRK-1003,${todayStr},福岡県福岡市,高橋`,
+      `TRK-1004,${futureDate},北海道札幌市,田中`,
+      `TRK-1005,${pastDate},愛知県名古屋市,伊藤`,
+      `TRK-1005,${pastDate},愛知県名古屋市(重複行),伊藤`,
+      `TRK-1006,${pastDate},宮城県仙台市,渡辺`
+    ].join('\n');
+
+    completeText.value = [
+      "追跡番号,完了日時,備考",
+      `TRK-1001,${pastDate} 14:20:00,置き配`,
+      `TRK-1003,${todayStr} 11:05:00,対面受取`,
+      `TRK-1005,${pastDate} 18:30:00,再配達`,
+      `TRK-1005,${pastDate} 18:31:00,二重スキャン？`,
+      `TRK-9999,${pastDate} 10:00:00,予定にない番号`
+    ].join('\n');
+
+    log("架空サンプルデータをロードしました。 「照合を実行」を押してください。");
+  }
+
+  // CSVパーサー（引用符・カンマ・改行対応）
+  function parseCSV(text) {
+    const lines = [];
+    let row = [];
+    let inQuotes = false;
+    let field = '';
+    
+    // 改行コード正規化
+    const normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    
+    for (let i = 0; i < normalized.length; i++) {
+      let c = normalized[i];
+      let next = normalized[i+1];
+
+      if (inQuotes) {
+        if (c === '"') {
+          if (next === '"') {
+            field += '"';
+            i++;
+          } else {
+            inQuotes = false;
+          }
+        } else {
+          field += c;
+        }
+      } else {
+        if (c === '"') {
+          inQuotes = true;
+        } else if (c === ',') {
+          row.push(field.trim());
+          field = '';
+        } else if (c === '\n') {
+          row.push(field.trim());
+          lines.push(row);
+          row = [];
+          field = '';
+        } else {
+          field += c;
+        }
+      }
+    }
+    if (field !== '' || row.length > 0) {
+      row.push(field.trim());
+      lines.push(row);
+    }
+
+    // 空行フィルター
+    return lines.filter(l => l.length > 0 && l.some(cell => cell !== ''));
+  }
+
+  function detectKeyIndex(headers, possibleNames) {
+    for (let name of possibleNames) {
+      let idx = headers.findIndex(h => h.toLowerCase().includes(name.toLowerCase()));
+      if (idx !== -1) return idx;
+    }
+    return -1;
+  }
+
+  function runAnalysis() {
+    clearLogs();
+    const planRaw = planText.value.trim();
+    const compRaw = completeText.value.trim();
+
+    if (!planRaw) {
+      alert("配送予定データが入力されていません。");
+      return;
+    }
+
+    try {
+      // 1. パース
+      const planRows = parseCSV(planRaw);
+      const compRows = parseCSV(compRaw);
+
+      if (planRows.length < 2) {
+        throw new Error("配送予定CSVにヘッダー行またはデータ行が不足しています。");
+      }
+
+      const planHeaders = planRows[0];
+      const planDataLines = planRows.slice(1);
+
+      // キー列の特定
+      const trackingIdxPlan = detectKeyIndex(planHeaders, ['追跡', '伝票', 'tracking', 'no', '番号']);
+      const dateIdxPlan = detectKeyIndex(planHeaders, ['予定', '日付', 'date', 'day']);
+
+      if (trackingIdxPlan === -1) {
+        throw new Error("配送予定CSVから「追跡番号」に該当する列が見つかりませんでした。ヘッダー名を確認してください。");
+      }
+
+      // 完了データのパース
+      let compHeaders = [];
+      let compDataLines = [];
+      let trackingIdxComp = -1;
+      let dateIdxComp = -1;
+
+      if (compRows.length > 0) {
+        compHeaders = compRows[0];
+        compDataLines = compRows.slice(1);
+        trackingIdxComp = detectKeyIndex(compHeaders, ['追跡', '伝票', 'tracking', 'no', '番号']);
+        dateIdxComp = detectKeyIndex(compHeaders, ['完了', '日時', 'date', 'time']);
+      }
+
+      // 現在日時（日付比較用 YYYY-MM-DD）
+      const todayDateStr = new Date().toISOString().slice(0, 10);
+
+      // マップ構築 & 重複検出
+      // 予定データ集計
+      const planMap = new Map(); // 追跡番号 -> Array of row objects
+      const dupPlanRows = [];
+      const allParsedPlans = [];
+
+      planDataLines.forEach((row, idx) => {
+        const trackingNo = row[trackingIdxPlan] || `(空行-${idx+1})`;
+        const planDate = dateIdxPlan !== -1 ? (row[dateIdxPlan] || '').slice(0, 10) : '';
+        
+        const record = {
+          lineNo: idx + 2,
+          trackingNo,
+          planDate,
+          rawRow: row,
+          headers: planHeaders
+        };
+
+        allParsedPlans.push(record);
+
+        if (!planMap.has(trackingNo)) {
+          planMap.set(trackingNo, []);
+        }
+        planMap.get(trackingNo).push(record);
+      });
+
+      // 予定データの重複抽出
+      planMap.forEach((records, trackingNo) => {
+        if (records.length > 1) {
+          records.forEach(r => dupPlanRows.push(r));
+        }
+      });
+
+      // 完了データ集計
+      const compMap = new Map(); // 追跡番号 -> Array of row objects
+      const dupCompRows = [];
+
+      if (trackingIdxComp !== -1) {
+        compDataLines.forEach((row, idx) => {
+          const trackingNo = row[trackingIdxComp] || `(空行-${idx+1})`;
+          const compDate = dateIdxComp !== -1 ? (row[dateIdxComp] || '').slice(0, 10) : '';
+          
+          const record = {
+            lineNo: idx + 2,
+            trackingNo,
+            compDate,
+            rawRow: row,
+            headers: compHeaders
+          };
+
+          if (!compMap.has(trackingNo)) {
+            compMap.set(trackingNo, []);
+          }
+          compMap.get(trackingNo).push(record);
+        });
+
+        compMap.forEach((records, trackingNo) => {
+          if (records.length > 1) {
+            records.forEach(r => dupCompRows.push(r));
+          }
+        });
+      }
+
+      // 照合ロジック
+      const overdueRows = []; // 予定日超過 且つ 完了なし
+      const missingRows = []; // 完了なし（当日含む）
+      const allMasterList = [];
+
+      // ユニークな追跡番号ベース、または行ベースでの照合
+      // 現場の要望に合わせ「予定データの各行」をベースに判定
+      allParsedPlans.forEach(plan => {
+        const hasCompleted = compMap.has(plan.trackingNo);
+        let status = '正常・完了';
+        let detail = '完了記録あり';
+
+        if (!hasCompleted) {
+          if (plan.planDate && plan.planDate < todayDateStr) {
+            status = '予定日超過・未完了';
+            detail = '予定日を過ぎていますが完了記録がありません';
+            overdueRows.push({ ...plan, statusDetail: detail });
+          } else {
+            status = '完了記録なし';
+            detail = 'まだ完了記録がありません（当日または未来）';
+            missingRows.push({ ...plan, statusDetail: detail });
+          }
+        } else {
+          // 完了しているが予定日超過していたケースなども考慮可能だがシンプルに
+          if (plan.planDate && plan.planDate < todayDateStr) {
+            // 完了日はあるが、完了日が予定日より後かどうかなどの判定もできるが原因断定を避けるため割愛
+          }
+        }
+
+        // 重複フラグの付与
+        if (planMap.get(plan.trackingNo).length > 1) {
+          status += ' (予定重複)';
+        }
+
+        allMasterList.push({
+          ...plan,
+          status,
+          hasCompleted: hasCompleted ? 'あり' : 'なし',
+          completedAt: hasCompleted ? compMap.get(plan.trackingNo).map(c => c.compDate).join(', ') : '-'
+        });
+      });
+
+      analysisResult = {
+        planHeaders,
+        allParsedPlans,
+        overdueRows,
+        missingRows,
+        dupPlanRows,
+        dupCompRows,
+        allMasterList,
+        stats: {
+          totalPlan: allParsedPlans.length,
+          totalComp: compDataLines.length,
+          overdue: overdueRows.length,
+          missing: missingRows.length,
+          dupPlan: dupPlanRows.length,
+          dupComp: dupCompRows.length
+        }
+      };
+
+      renderResults();
+      resultCard.classList.remove('hidden');
+      log(`照合完了: 予定=${allParsedPlans.length}件, 完了データ=${compDataLines.length}件, 超過未完了=${overdueRows.length}件`);
+
+    } catch (err) {
+      log(`エラー: ${err.message}`, true);
+      alert(`エラーが発生しました:\n${err.message}`);
+    }
+  }
+
+  function renderResults() {
+    const s = analysisResult.stats;
+    document.getElementById('statPlan').textContent = s.totalPlan;
+    document.getElementById('statComplete').textContent = s.totalComp;
+    document.getElementById('statOverdue').textContent = s.overdue;
+    document.getElementById('statMissing').textContent = s.missing;
+    document.getElementById('statDupPlan').textContent = s.dupPlan;
+
+    document.getElementById('cntOverdue').textContent = s.overdue;
+    document.getElementById('cntMissing').textContent = s.missing;
+    document.getElementById('cntDupPlan').textContent = s.dupPlan;
+    document.getElementById('cntDupComp').textContent = s.dupComp;
+    document.getElementById('cntAll').textContent = s.totalPlan;
+
+    // テーブル描画
+    renderTable('tableOverdue', analysisResult.planHeaders.concat(['判定理由']), analysisResult.overdueRows.map(r => [...r.rawRow, r.statusDetail]));
+    renderTable('tableMissing', analysisResult.planHeaders.concat(['判定理由']), analysisResult.missingRows.map(r => [...r.rawRow, r.statusDetail]));
+    renderTable('tableDupPlan', analysisResult.planHeaders.concat(['行番号']), analysisResult.dupPlanRows.map(r => [...r.rawRow, `予定CSV ${r.lineNo}行目`]));
+    
+    let compHeaders = analysisResult.dupCompRows.length > 0 ? analysisResult.dupCompRows[0].headers : ['追跡番号', '完了日時'];
+    renderTable('tableDupComp', compHeaders.concat(['行番号']), analysisResult.dupCompRows.map(r => [...r.rawRow, `完了CSV ${r.lineNo}行目`]));
+
+    renderTable('tableAll', analysisResult.planHeaders.concat(['完了記録', '完了日時', 'ステータス']), analysisResult.allMasterList.map(r => [...r.rawRow, r.hasCompleted, r.completedAt, r.status]));
+  }
+
+  function renderTable(tableId, headers, rows) {
+    const table = document.getElementById(tableId);
+    const thead = table.querySelector('thead');
+    const tbody = table.querySelector('tbody');
+    
+    thead.innerHTML = '';
+    tbody.innerHTML = '';
+
+    // ヘッダー生成
+    const trHead = document.createElement('tr');
+    headers.forEach(h => {
+      const th = document.createElement('th');
+      th.textContent = h;
+      trHead.appendChild(th);
+    });
+    thead.appendChild(trHead);
+
+    // 行生成
+    if (rows.length === 0) {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = headers.length;
+      td.textContent = '該当するデータはありません';
+      td.style.textAlign = 'center';
+      td.style.color = 'var(--text-muted)';
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return;
+    }
+
+    rows.forEach(rowCells => {
+      const tr = document.createElement('tr');
+      rowCells.forEach(cell => {
+        const td = document.createElement('td');
+        td.textContent = cell !== undefined ? cell : '';
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+  }
+
+  function exportResultsCSV() {
+    if (!analysisResult) return;
+
+    // アクティブなタブに連動したエクスポート、または全マスター出力
+    let exportData = [];
+    let filename = 'delivery_match_all.csv';
+
+    const activeTab = document.querySelector('.tab.active').getAttribute('data-target');
+    let headers = [];
+    let rows = [];
+
+    if (activeTab === 'tabOverdue') {
+      headers = analysisResult.planHeaders.concat(['判定理由']);
+      rows = analysisResult.overdueRows.map(r => [...r.rawRow, r.statusDetail]);
+      filename = 'overdue_uncompleted.csv';
+    } else if (activeTab === 'tabMissing') {
+      headers = analysisResult.planHeaders.concat(['判定理由']);
+      rows = analysisResult.missingRows.map(r => [...r.rawRow, r.statusDetail]);
+      filename = 'missing_completion.csv';
+    } else if (activeTab === 'tabDupPlan') {
+      headers = analysisResult.planHeaders.concat(['行番号']);
+      rows = analysisResult.dupPlanRows.map(r => [...r.rawRow, `予定CSV ${r.lineNo}行目`]);
+      filename = 'duplicate_plan_rows.csv';
+    } else if (activeTab === 'tabDupComp') {
+      headers = (analysisResult.dupCompRows[0]?.headers || ['追跡番号', '完了日時']).concat(['行番号']);
+      rows = analysisResult.dupCompRows.map(r => [...r.rawRow, `完了CSV ${r.lineNo}行目`]);
+      filename = 'duplicate_complete_rows.csv';
+    } else {
+      headers = analysisResult.planHeaders.concat(['完了記録', '完了日時', 'ステータス']);
+      rows = analysisResult.allMasterList.map(r => [...r.rawRow, r.hasCompleted, r.completedAt, r.status]);
+      filename = 'delivery_master_status.csv';
+    }
+
+    exportData.push(headers);
+    rows.forEach(r => exportData.push(r));
+
+    // CSV文字列生成（ダブルクォーテーションのエスケープ含む）
+    const csvString = exportData.map(row => 
+      row.map(cell => {
+        let str = String(cell !== null && cell !== undefined ? cell : '');
+        if (str.includes('"') || str.includes(',') || str.includes('\n')) {
+          str = '"' + str.replace(/"/g, '""') + '"';
+        }
+        return str;
+      }).join(',')
+    ).join('\r\n');
+
+    // ダウンロード
+    const blob = new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    log(`結果をCSVファイル (${filename}) としてエクスポートしました。`);
+  }
+
+})();
+</script>
+</body>
+</html>
