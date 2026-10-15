@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>工数照合チェッカー</title>
+<style>
+:root {
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --text: #1e293b;
+  --text-muted: #64748b;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --danger: #dc2626;
+  --danger-bg: #fee2e2;
+  --warning: #d97706;
+  --warning-bg: #fef3c7;
+  --success: #16a34a;
+  --success-bg: #dcfce7;
+  --border: #cbd5e1;
+  --radius: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  padding: 16px;
+}
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+header {
+  margin-bottom: 24px;
+  text-align: center;
+}
+h1 {
+  font-size: 1.5rem;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+p.subtitle {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.card h2 {
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 768px) {
+  .grid-2 { grid-template-columns: 1fr; }
+}
+.form-group {
+  margin-bottom: 12px;
+}
+label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+input[type="file"] {
+  width: 100%;
+  font-size: 0.85rem;
+  padding: 8px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: #f1f5f9;
+}
+.btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn:hover { background: var(--primary-hover); }
+.btn-secondary {
+  background: #475569;
+}
+.btn-secondary:hover { background: #334155; }
+.btn-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.error-box {
+  background: var(--danger-bg);
+  color: var(--danger);
+  padding: 12px;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+  white-space: pre-wrap;
+}
+.success-box {
+  background: var(--success-bg);
+  color: var(--success);
+  padding: 12px;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  padding: 12px;
+  border-radius: var(--radius);
+  text-align: center;
+}
+.stat-card .val {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--primary);
+}
+.stat-card .lbl {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+th, td {
+  border: 1px solid var(--border);
+  padding: 8px;
+  text-align: left;
+}
+th {
+  background: #f1f5f9;
+  font-weight: bold;
+}
+.badge {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  font-weight: bold;
+}
+.badge-danger { background: var(--danger-bg); color: var(--danger); }
+.badge-warning { background: var(--warning-bg); color: var(--warning); }
+.table-container {
+  overflow-x: auto;
+  max-height: 400px;
+  overflow-y: auto;
+}
+.help-text {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>工数照合チェッカー</h1>
+    <p class="subtitle">案件工数CSVと見積工数CSVを突き合わせ、超過・偏り・重複を自動検出します</p>
+  </header>
+
+  <div class="card">
+    <h2>1. データ入力</h2>
+    <div style="margin-bottom: 16px;">
+      <button type="button" id="sampleBtn" class="btn btn-secondary">架空サンプルデータを読み込む</button>
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label for="actualFile">実績工数 CSV</label>
+        <input type="file" id="actualFile" accept=".csv, .txt">
+        <div class="help-text">必須列: <code>案件ID</code>, <code>担当者</code>, <code>工数(H)</code>, <code>日付</code> (重複チェック用)</div>
+      </div>
+      <div class="form-group">
+        <label for="estimateFile">見積工数 CSV</label>
+        <input type="file" id="estimateFile" accept=".csv, .txt">
+        <div class="help-text">必須列: <code>案件ID</code>, <code>見積工数(H)</code></div>
+      </div>
+    </div>
+    <div class="btn-group">
+      <button type="button" id="runBtn" class="btn">照合を実行する</button>
+    </div>
+  </div>
+
+  <div id="errorContainer" class="error-box hidden"></div>
+  <div id="successContainer" class="success-box hidden"></div>
+
+  <div id="resultCard" class="card hidden">
+    <h2>
+      <span>2. 照合結果サマリー</span>
+      <button type="button" id="exportBtn" class="btn" style="font-size: 0.8rem; padding: 6px 12px;">要確認行CSV出力</button>
+    </h2>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="val" id="statOver">0</div>
+        <div class="lbl">予定超過案件数</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" id="statDup">0</div>
+        <div class="lbl">入力重複検出件数</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" id="statSkew">0</div>
+        <div class="lbl">偏り警告（担当者×案件）</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 16px;">
+      <h3 style="font-size:0.95rem; margin-bottom:8px;">要確認・異常リスト（抽出結果）</h3>
+      <div class="table-container">
+        <table id="resultTable">
+          <thead>
+            <tr>
+              <th>判定理由</th>
+              <th>案件ID</th>
+              <th>担当者</th>
+              <th>日付</th>
+              <th>実績H</th>
+              <th>見積H</th>
+              <th>詳細</th>
+            </tr>
+          </thead>
+          <tbody id="resultBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  // サンプルデータ文字列
+  const sampleActual = `案件ID,担当者,工数(H),日付,メモ
+P-001,佐藤 太郎,8.0,2023-10-01,設計作業
+P-001,佐藤 太郎,8.0,2023-10-01,設計作業(重複)
+P-001,鈴木 一郎,35.0,2023-10-05,実装過多
+P-002,高橋 美咲,15.0,2023-10-02,仕様調整
+P-003,佐藤 太郎,5.0,2023-10-03,テスト
+X-999,不明 担当,10.0,2023-10-04,見積にない案件`;
+
+  const sampleEstimate = `案件ID,案件名,見積工数(H)
+P-001,A社ECサイト構築,30.0
+P-002,B社基幹システム,20.0
+P-003,C社HP改修,10.0`;
+
+  // CSVパルサ (ダブルクォート対応)
+  function parseCSV(text) {
+    const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+    const result = [];
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      const row = [];
+      let inQuote = false;
+      let curVal = '';
+      for (let j = 0; j < line.length; j++) {
+        const char = line[j];
+        if (char === '"') {
+          if (inQuote && line[j + '1'] === '"') {
+            curVal += '"';
+            j++;
+          } else {
+            inQuote = !inQuote;
+          }
+        } else if (char === ',' && !inQuote) {
+          row.push(curVal.trim());
+          curVal = '';
+        } else {
+          curVal += char;
+        }
+      }
+      row.push(curVal.trim());
+      result.push(row);
+    }
+    return result;
+  }
+
+  function csvToObjects(text) {
+    const rows = parseCSV(text);
+    if (rows.length < 2) throw new Error("CSVの行数が不足しています（ヘッダーと1行以上のデータが必要）。");
+    const headers = rows[0].map(h => h.replace(/^["']|["']$/g, ''));
+    const data = [];
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      const obj = {};
+      for (let j = 0; j < headers.length; j++) {
+        obj[headers[j]] = row[j] !== undefined ? row[j].replace(/^["']|["']$/g, '') : '';
+      }
+      data.push(obj);
+    }
+    return { headers, data };
+  }
+
+  let latestFlags = []; // エクスポート用
+
+  function runCheck() {
+    const actualFileEl = document.getElementById('actualFile');
+    const estimateFileEl = document.getElementById('estimateFile');
+    const errBox = document.getElementById('errorContainer');
+    const succBox = document.getElementById('successContainer');
+    const resCard = document.getElementById('resultCard');
+
+    errBox.classList.add('hidden');
+    succBox.classList.add('hidden');
+    resCard.classList.add('hidden');
+
+    try {
+      const actualFile = actualFileEl.files[0];
+      const estimateFile = estimateFileEl.files[0];
+
+      if (!actualFile || !estimateFile) {
+        throw new Error("実績工数CSVと見積工数CSVの両方を選択してください。");
+      }
+
+      // ファイル読み込みを同期的に処理するためのPromise用ラッパーは使えないのでFileReaderを順次
+      const readerActual = new FileReader();
+      const readerEstimate = new FileReader();
+
+      readerActual.onload = function(e1) {
+        readerEstimate.onload = function(e2) {
+          try {
+            processAnalysis(e1.target.result, e2.target.result);
+          } catch (err) {
+            errBox.textContent = "解析エラー: " + err.message;
+            errBox.classList.remove('hidden');
+          }
+        };
+        readerEstimate.readAsText(estimateFile, 'UTF-8');
+      };
+      readerActual.readAsText(actualFile, 'UTF-8');
+
+    } catch (err) {
+      errBox.textContent = err.message;
+      errBox.classList.remove('hidden');
+    }
+  }
+
+  function processAnalysis(actualText, estimateText) {
+    const actualParsed = csvToObjects(actualText);
+    const estimateParsed = csvToObjects(estimateText);
+
+    // 必須列チェック
+    const requiredActualCols = ['案件ID', '担当者', '工数(H)', '日付'];
+    for (const col of requiredActualCols) {
+      if (!actualParsed.headers.includes(col)) {
+        throw new Error(`実績工数CSVに必須列「${col}」が見つかりません。`);
+      }
+    }
+
+    const requiredEstCols = ['案件ID', '見積工数(H)'];
+    for (const col of requiredEstCols) {
+      if (!estimateParsed.headers.includes(col)) {
+        throw new Error(`見積工数CSVに必須列「${col}」が見つかりません。`);
+      }
+    }
+
+    // 見積データのマップ化 (重複キーは後ろを採用しエラー通知の準備)
+    const estimateMap = new Map();
+    for (const row of estimateParsed.data) {
+      const id = row['案件ID'];
+      if (!id) continue;
+      const hours = parseFloat(row['見積工数(H)']) || 0;
+      estimateMap.set(id, hours);
+    }
+
+    // 1. 工数入力の重複チェック
+    // キー: 案件ID + 担当者 + 日付 + 工数
+    const seenRows = new Map();
+    const duplicateRows = [];
+
+    // 2. 担当者別・案件別の工数集計
+    // actualSumByProject: 案件ID -> 合計実績工数
+    // personProjectSum: "案件ID_担当者" -> 合計工数
+    const actualSumByProject = new Map();
+    const personProjectSum = new Map();
+    const unmappedProjects = new Set();
+
+    actualParsed.data.forEach((row, idx) => {
+      const id = row['案件ID'];
+      const person = row['担当者'];
+      const date = row['日付'];
+      const hours = parseFloat(row['工数(H)']) || 0;
+
+      if (!id) return;
+
+      // 重複チェックキー
+      const dupKey = `${id}|${person}|${date}|${hours}`;
+      if (seenRows.has(dupKey)) {
+        duplicateRows.push({
+          index: idx + 2,
+          type: '入力重複',
+          id, person, date, hours,
+          est: estimateMap.get(id) || 0,
+          detail: `行 ${seenRows.dupKey} と同一内容の重複入力`
+        });
+      } else {
+        seenRows.set(dupKey, idx + 2);
+      }
+
+      // 見積存在チェック
+      if (!estimateMap.has(id)) {
+        unmappedProjects.add(id);
+      }
+
+      // 案件ごとの合計
+      const currentProjSum = actualSumByProject.get(id) || 0;
+      actualSumByProject.set(id, currentProjSum + hours);
+
+      // 担当者×案件ごとの合計
+      const ppKey = `${id}__${person}`;
+      const currentPPSum = personProjectSum.get(ppKey) || 0;
+      personProjectSum.set(ppKey, currentPPSum + hours);
+    });
+
+    // 3. 予定超過・偏りの検出
+    const flaggedItems = [...duplicateRows];
+
+    // 案件ごとの超過チェック
+    const overProjects = [];
+    for (const [id, totalActual] of actualSumByProject.entries()) {
+      const est = estimateMap.get(id);
+      if (est !== undefined && totalActual > est) {
+        overProjects.push({ id, totalActual, est });
+        flaggedItems.push({
+          index: '-',
+          type: '予定超過',
+          id, person: '-', date: '-',
+          hours: totalActual,
+          est: est,
+          detail: `実績合計(${totalActual}H) が 見積(${est}H) を超過`
+        });
+      }
+      if (est === undefined) {
+        flaggedItems.push({
+          index: '-',
+          type: '見積なし',
+          id, person: '-', date: '-',
+          hours: totalActual,
+          est: 0,
+          detail: `見積CSVに存在しない案件IDです`
+        });
+      }
+    }
+
+    // 担当者の偏りチェック (例: 同一案件内で1人が全体の70%以上かつ20H以上を投入している場合など)
+    const skewItems = [];
+    for (const [ppKey, hours] of personProjectSum.entries()) {
+      const [id, person] = ppKey.split('__');
+      const totalProjHours = actualSumByProject.get(id) || 1;
+      const ratio = hours / totalProjHours;
+      if (ratio >= 0.8 && hours >= 15 && totalProjHours >= 20) {
+        skewItems.push({ id, person, hours, ratio });
+        flaggedItems.push({
+          index: '-',
+          type: '担当偏り',
+          id, person, date: '-',
+          hours: hours,
+          est: estimateMap.get(id) || 0,
+          detail: `単一担当者の工数比率が ${Math.round(ratio * 100)}% (${hours}H/${totalProjHours}H) に偏っています`
+        });
+      }
+    }
+
+    latestFlags = flaggedItems;
+
+    // 画面描画
+    document.getElementById('statOver').textContent = overProjects.length;
+    document.getElementById('statDup').textContent = duplicateRows.length;
+    document.getElementById('statSkew').textContent = skewItems.length;
+
+    const tbody = document.getElementById('resultBody');
+    tbody.innerHTML = '';
+
+    if (flaggedItems.length === 0) {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 7;
+      td.textContent = '要確認項目は検出されませんでした。正常です。';
+      td.style.textAlign = 'center';
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+    } else {
+      flaggedItems.forEach(item => {
+        const tr = document.createElement('tr');
+        
+        let badgeClass = 'badge-warning';
+        if (item.type === '予定超過' || item.type === '見積なし') badgeClass = 'badge-danger';
+        if (item.type === '入力重複') badgeClass = 'badge-danger';
+
+        tr.innerHTML = `
+          <td><span class="badge ${badgeClass}">${escapeHTML(item.type)}</span></td>
+          <td>${escapeHTML(item.id)}</td>
+          <td>${escapeHTML(item.person)}</td>
+          <td>${escapeHTML(item.date)}</td>
+          <td>${escapeHTML(String(item.hours))}</td>
+          <td>${escapeHTML(String(item.est))}</td>
+          <td>${escapeHTML(item.detail)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('successContainer').textContent = `照合完了: 要確認・異常行が ${flaggedItems.length} 件見つかりました。`;
+    document.getElementById('successContainer').classList.remove('hidden');
+    document.getElementById('resultCard').classList.remove('hidden');
+  }
+
+  function escapeHTML(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function exportCSV() {
+    if (!latestFlags || latestFlags.length === 0) {
+      alert("出力するデータがありません。");
+      return;
+    }
+    const headers = ["判定理由", "案件ID", "担当者", "日付", "実績H", "見積H", "詳細"];
+    const rows = [headers.join(',')];
+
+    latestFlags.forEach(item => {
+      const row = [
+        `"${item.type}"`,
+        `"${item.id}"`,
+        `"${item.person}"`,
+        `"${item.date}"`,
+        item.hours,
+        item.est,
+        `"${item.detail.replace(/"/g, '""')}"`
+      ];
+      rows.push(row.join(','));
+    });
+
+    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const blob = new Blob([bom, rows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'review_required_result.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function loadSampleData() {
+    const blobActual = new Blob([sampleActual], { type: 'text/csv' });
+    const fileActual = new File([blobActual], 'actual_sample.csv', { type: 'text/csv' });
+    
+    const blobEst = new Blob([sampleEstimate], { type: 'text/csv' });
+    const fileEst = new File([blobEst], 'estimate_sample.csv', { type: 'text/csv' });
+
+    // DataTransferでinput[type=file]にセット
+    const dt1 = new DataTransfer();
+    dt1.items.add(fileActual);
+    document.getElementById('actualFile').files = dt1.files;
+
+    const dt2 = new DataTransfer();
+    dt2.items.add(fileEst);
+    document.getElementById('estimateFile').files = dt2.files;
+
+    document.getElementById('successContainer').textContent = "サンプルデータを読み込みました。「照合を実行する」を押してください。";
+    document.getElementById('successContainer').classList.remove('hidden');
+    document.getElementById('errorContainer').classList.add('hidden');
+  }
+
+  // イベントリスナー登録
+  document.getElementById('runBtn').addEventListener('click', runCheck);
+  document.getElementById('sampleBtn').addEventListener('click', loadSampleData);
+  document.getElementById('exportBtn').addEventListener('click', exportCSV);
+
+})();
+</script>
+</body>
+</html>
