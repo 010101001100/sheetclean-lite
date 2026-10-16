@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>倉庫在庫・入出庫チェックツール</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0ea5e9;
+      --danger: #f43f5e;
+      --warning: #f59e0b;
+      --success: #10b981;
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 16px;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    header {
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 16px;
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    p.desc {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+      align-items: center;
+    }
+    button, label.btn {
+      background-color: var(--accent);
+      color: #0f172a;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background-color 0.2s;
+    }
+    button:hover, label.btn:hover {
+      background-color: var(--accent-hover);
+    }
+    button.secondary {
+      background-color: transparent;
+      color: var(--text);
+      border: 1px solid var(--card-border);
+    }
+    button.secondary:hover {
+      background-color: rgba(255,255,255,0.05);
+    }
+    input[type="file"] {
+      display: none;
+    }
+    textarea {
+      width: 100%;
+      height: 140px;
+      background-color: #0b0f19;
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      padding: 12px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      resize: vertical;
+    }
+    .grid-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .stat-box {
+      background-color: #0b0f19;
+      border: 1px solid var(--card-border);
+      padding: 16px;
+      border-radius: var(--radius);
+    }
+    .stat-box .label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .stat-box .value {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+    .stat-box.danger .value { color: var(--danger); }
+    .stat-box.warning .value { color: var(--warning); }
+    .stat-box.success .value { color: var(--success); }
+    
+    h2 {
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .table-container {
+      overflow-x: auto;
+      max-height: 400px;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    th {
+      background-color: #111827;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    tr:hover td {
+      background-color: rgba(255,255,255,0.02);
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge.minus { background-color: rgba(244, 63, 94, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+    .badge.dup { background-color: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid var(--warning); }
+    .badge.rev { background-color: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid #c084fc; }
+    
+    .format-hint {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+    .error-box {
+      background-color: rgba(244, 63, 94, 0.1);
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 8px;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 6px 12px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-radius: 4px;
+    }
+    .tab-btn.active {
+      background-color: var(--card-border);
+      color: var(--text);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>倉庫在庫・入出庫チェッカー</h1>
+    <p class="desc">時系列の在庫残数を復元し、マイナス在庫、数量の逆転（マイナス入出庫）、重複伝票をローカル環境で瞬時に検出します。</p>
+  </header>
+
+  <div class="card">
+    <h2>1. CSVデータの入力</h2>
+    <div class="actions">
+      <label class="btn" for="csvFileInput">
+        CSVファイルを選択
+      </label>
+      <input type="file" id="csvFileInput" accept=".csv,.txt">
+      <button type="button" id="sampleBtn" class="secondary">サンプルデータを読み込む</button>
+      <button type="button" id="clearBtn" class="secondary">クリア</button>
+    </div>
+    <textarea id="csvInput" placeholder="または、ここにCSVを直接貼り付けてください..."></textarea>
+    <div class="format-hint">
+      必須カラム名（ヘッダー行必要）: <code>伝票番号, 日時, SKU, 区分, 数量</code> （区分は "入庫" または "出庫"）
+    </div>
+  </div>
+
+  <div id="errorContainer" style="display: none;" class="error-box"></div>
+
+  <div id="resultSection" style="display: none;">
+    <div class="grid-stats">
+      <div class="stat-box" id="statRows">
+        <div class="label">有効データ行数</div>
+        <div class="value">0</div>
+      </div>
+      <div class="stat-box danger" id="statMinus">
+        <div class="label">マイナス在庫発生件数</div>
+        <div class="value">0</div>
+      </div>
+      <div class="stat-box warning" id="statDup">
+        <div class="label">重複伝票番号件数</div>
+        <div class="value">0</div>
+      </div>
+      <div class="stat-box warning" id="statRev">
+        <div class="label">数量逆転 (異常値) 件数</div>
+        <div class="value">0</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tabs">
+        <button type="button" class="tab-btn active" data-tab="tabErrors">異常・警告一覧 (<span id="errCountBadge">0</span>)</button>
+        <button type="button" class="tab-btn" data-tab="tabLedger">全時系列元帳</button>
+      </div>
+
+      <div id="tabErrors" class="tab-content active">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+          <button type="button" id="exportErrBtn" class="secondary" style="font-size: 0.8rem; padding: 6px 12px;">異常リストをCSV出力</button>
+        </div>
+        <div class="table-container">
+          <table id="errorTable">
+            <thead>
+              <tr>
+                <th>行</th>
+                <th>伝票番号</th>
+                <th>日時</th>
+                <th>SKU</th>
+                <th>区分</th>
+                <th>数量</th>
+                <th>異常内容</th>
+                <th>詳細説明</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="tabLedger" class="tab-content">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+          <button type="button" id="exportLedgerBtn" class="secondary" style="font-size: 0.8rem; padding: 6px 12px;">全元帳をCSV出力</button>
+        </div>
+        <div class="table-container">
+          <table id="ledgerTable">
+            <thead>
+              <tr>
+                <th>行</th>
+                <th>伝票番号</th>
+                <th>日時</th>
+                <th>SKU</th>
+                <th>区分</th>
+                <th>移動数量</th>
+                <th>処理後在庫残</th>
+                <th>検出フラグ</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const SAMPLE_CSV = `伝票番号,日時,SKU,区分,数量
+SLIP-001,2025-05-01 09:00,SKU-A,入庫,100
+SLIP-002,2025-05-01 10:00,SKU-A,出庫,30
+SLIP-003,2025-05-01 11:00,SKU-B,出庫,10
+SLIP-004,2025-05-01 12:00,SKU-A,出庫,80
+SLIP-005,2025-05-02 09:00,SKU-B,入庫,50
+SLIP-002,2025-05-02 10:00,SKU-A,出庫,30
+SLIP-006,2025-05-02 11:00,SKU-C,入庫,-20
+SLIP-007,2025-05-02 13:00,SKU-C,出庫,10`;
+
+  let processedData = null;
+
+  const csvInput = document.getElementById('csvInput');
+  const csvFileInput = document.getElementById('csvFileInput');
+  const sampleBtn = document.getElementById('sampleBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const errorContainer = document.getElementById('errorContainer');
+  const resultSection = document.getElementById('resultSection');
+
+  const statRows = document.querySelector('#statRows .value');
+  const statMinus = document.querySelector('#statMinus .value');
+  const statDup = document.querySelector('#statDup .value');
+  const statRev = document.querySelector('#statRev .value');
+  const errCountBadge = document.getElementById('errCountBadge');
+
+  const errorTableBody = document.querySelector('#errorTable tbody');
+  const ledgerTableBody = document.querySelector('#ledgerTable tbody');
+
+  const exportErrBtn = document.getElementById('exportErrBtn');
+  const exportLedgerBtn = document.getElementById('exportLedgerBtn');
+
+  // タブ切り替え
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      this.classList.add('active');
+      const targetId = this.getAttribute('data-tab');
+      document.getElementById(targetId).classList.add('active');
+    });
+  });
+
+  sampleBtn.addEventListener('click', () => {
+    csvInput.value = SAMPLE_CSV;
+    runAnalysis();
+  });
+
+  clearBtn.addEventListener('click', () => {
+    csvInput.value = '';
+    csvFileInput.value = '';
+    resultSection.style.display = 'none';
+    errorContainer.style.display = 'none';
+    processedData = null;
+  });
+
+  csvInput.addEventListener('input', runAnalysis);
+
+  csvFileInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      csvInput.value = evt.target.result;
+      runAnalysis();
+    };
+    reader.readAsText(file, 'UTF-8');
+  });
+
+  exportErrBtn.addEventListener('click', () => {
+    if (!processedData || processedData.anomalies.length === 0) return;
+    const headers = ['行', '伝票番号', '日時', 'SKU', '区分', '数量', '異常内容', '詳細説明'];
+    const rows = processedData.anomalies.map(a => [
+      a.rowNum, a.slipId, a.datetime, a.sku, a.type, a.qty, a.errTypeDesc, a.desc
+    ]);
+    exportCSV('inventory_anomalies.csv', headers, rows);
+  });
+
+  exportLedgerBtn.addEventListener('click', () => {
+    if (!processedData) return;
+    const headers = ['行', '伝票番号', '日時', 'SKU', '区分', '移動数量', '処理後在庫残', '検出フラグ'];
+    const rows = processedData.ledger.map(l => [
+      l.rowNum, l.slipId, l.datetime, l.sku, l.type, l.qty, l.balanceAfter, l.flags.join(' / ')
+    ]);
+    exportCSV('inventory_ledger.csv', headers, rows);
+  });
+
+  function parseCSV(text) {
+    const lines = text.split(/\r\n|\n/);
+    const rows = [];
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      
+      let row = [];
+      let inQuotes = false;
+      let currentVal = '';
+      for (let j = 0; j < line.length; j++) {
+        let char = line[j];
+        if (char === '"') {
+          if (inQuotes && line[j+1] === '"') {
+            currentVal += '"';
+            j++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          row.push(currentVal.trim());
+          currentVal = '';
+        } else {
+          currentVal += char;
+        }
+      }
+      row.push(currentVal.trim());
+      rows.push({ rowNum: i + 1, cols: row });
+    }
+    return rows;
+  }
+
+  function runAnalysis() {
+    errorContainer.style.display = 'none';
+    errorContainer.textContent = '';
+
+    const rawText = csvInput.value.trim();
+    if (!rawText) {
+      resultSection.style.display = 'none';
+      return;
+    }
+
+    try {
+      const rawRows = parseCSV(rawText);
+      if (rawRows.length < 2) {
+        throw new Error("CSVデータが不足しています（ヘッダー行および1行以上のデータが必要です）。");
+      }
+
+      const header = rawRows[0].cols.map(h => h.replace(/^["']|["']$/g, ''));
+      const reqCols = ['伝票番号', '日時', 'SKU', '区分', '数量'];
+      const colMap = {};
+      
+      for (let rc of reqCols) {
+        const idx = header.indexOf(rc);
+        if (idx === -1) {
+          throw new Error(`必須カラム "${rc}" が見つかりません。\nヘッダー行には [伝票番号, 日時, SKU, 区分, 数量] が必要です。`);
+        }
+        colMap[rc] = idx;
+      }
+
+      // データパースとバリデーション
+      const transactions = [];
+      const slipCounts = {}; // 重複チェック用
+
+      for (let i = 1; i < rawRows.length; i++) {
+        const r = rawRows[i];
+        const cols = r.cols;
+        if (cols.length < header.length) {
+          // カラム数不足行のフォールバック
+        }
+
+        const slipId = cols[colMap['伝票番号']] || '';
+        const datetime = cols[colMap['日時']] || '';
+        const sku = cols[colMap['SKU']] || '';
+        const type = cols[colMap['区分']] || '';
+        const qtyRaw = cols[colMap['数量']] || '0';
+
+        if (!slipId && !sku) continue; // 空行スキップ
+
+        const qty = parseFloat(qtyRaw);
+
+        // 重複伝票カウント
+        if (slipId) {
+          slipCounts[slipId] = (slipCounts[slipId] || 0) + 1;
+        }
+
+        transactions.push({
+          rowNum: r.rowNum,
+          slipId: slipId,
+          datetime: datetime,
+          sku: sku,
+          type: type,
+          qty: isNaN(qty) ? 0 : qty,
+          qtyValid: !isNaN(qty),
+          qtyRaw: qtyRaw
+        });
+      }
+
+      // 時系列ソート (日時順、同一日時は行番号順)
+      transactions.sort((a, b) => {
+        if (a.datetime < b.datetime) return -1;
+        if (a.datetime > b.datetime) return 1;
+        return a.rowNum - b.rowNum;
+      });
+
+      // SKUごとに在庫残数をシミュレーション
+      const stockBalances = {}; // SKU別現在庫
+      const ledger = [];
+      const anomalies = [];
+
+      // 重複伝票判定セット（出現回数が2回以上の伝票番号）
+      const duplicateSlipIds = new Set();
+      for (let sId in slipCounts) {
+        if (slipCounts[sId] > 1) {
+          duplicateSlipIds.add(sId);
+        }
+      }
+
+      const seenSlipsGlobal = new Set();
+
+      for (let t of transactions) {
+        if (!stockBalances[t.sku]) {
+          stockBalances[t.sku] = 0;
+        }
+
+        const flags = [];
+        let isMinus = false;
+        let isDup = false;
+        let isRev = false;
+
+        // 1. 数量の逆転チェック（マイナス入出庫、または区分矛盾）
+        if (!t.qtyValid) {
+          isRev = true;
+          flags.push('数量異常');
+        } else if (t.type === '入庫' && t.qty < 0) {
+          isRev = true;
+          flags.push('入庫数マイナス');
+        } else if (t.type === '出庫' && t.qty < 0) {
+          isRev = true;
+          flags.push('出庫数マイナス');
+        } else if (t.type !== '入庫' && t.type !== '出庫') {
+          isRev = true;
+          flags.push('区分不正');
+        }
+
+        // 2. 重複伝票チェック
+        if (duplicateSlipIds.has(t.slipId)) {
+          isDup = true;
+          flags.push('重複伝票');
+        }
+
+        // 在庫変動計算 (数量逆転している場合はそのまま足すか、絶対値にするか。ここでは入力値をそのまま加減算するが、逆転としてフラグ化)
+        let effectiveQty = t.qtyValid ? t.qty : 0;
+        if (t.type === '出庫') {
+          stockBalances[t.sku] -= effectiveQty;
+        } else if (t.type === '入庫') {
+          stockBalances[t.sku] += effectiveQty;
+        }
+
+        const currentBalance = stockBalances[t.sku];
+
+        // 3. マイナス在庫チェック
+        if (currentBalance < 0) {
+          isMinus = true;
+          flags.push('マイナス在庫');
+        }
+
+        ledger.push({
+          rowNum: t.rowNum,
+          slipId: t.slipId,
+          datetime: t.datetime,
+          sku: t.sku,
+          type: t.type,
+          qty: t.qtyRaw,
+          balanceAfter: currentBalance,
+          flags: flags
+        });
+
+        // アノマリー記録
+        if (isMinus) {
+          anomalies.push({
+            rowNum: t.rowNum,
+            slipId: t.slipId,
+            datetime: t.datetime,
+            sku: t.sku,
+            type: t.type,
+            qty: t.qtyRaw,
+            errType: 'minus',
+            errTypeDesc: 'マイナス在庫',
+            desc: `SKU「${t.sku}」の在庫残数が ${currentBalance} に低下しました`
+          });
+        }
+        if (isDup) {
+          anomalies.push({
+            rowNum: t.rowNum,
+            slipId: t.slipId,
+            datetime: t.datetime,
+            sku: t.sku,
+            type: t.type,
+            qty: t.qtyRaw,
+            errType: 'dup',
+            errTypeDesc: '重複伝票',
+            desc: `伝票番号「${t.slipId}」が複数回出現しています`
+          });
+        }
+        if (isRev) {
+          anomalies.push({
+            rowNum: t.rowNum,
+            slipId: t.slipId,
+            datetime: t.datetime,
+            sku: t.sku,
+            type: t.type,
+            qty: t.qtyRaw,
+            errType: 'rev',
+            errTypeDesc: '数量逆転/不正',
+            desc: `区分「${t.type}」に対し数量「${t.qtyRaw}」が不自然または不正です`
+          });
+        }
+      }
+
+      processedData = { ledger, anomalies, totalRows: transactions.length };
+      renderResults();
+
+    } catch (err) {
+      errorContainer.textContent = "エラー: " + err.message;
+      errorContainer.style.display = 'block';
+      resultSection.style.display = 'none';
+    }
+  }
+
+  function renderResults() {
+    if (!processedData) return;
+
+    statRows.textContent = processedData.totalRows;
+    
+    const minusCount = processedData.anomalies.filter(a => a.errType === 'minus').length;
+    const dupCount = processedData.anomalies.filter(a => a.errType === 'dup').length;
+    const revCount = processedData.anomalies.filter(a => a.errType === 'rev').length;
+
+    statMinus.textContent = minusCount;
+    statDup.textContent = dupCount;
+    statRev.textContent = revCount;
+    errCountBadge.textContent = processedData.anomalies.length;
+
+    // 異常テーブル描画
+    errorTableBody.innerHTML = '';
+    if (processedData.anomalies.length === 0) {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 8;
+      td.textContent = '異常・警告は検出されませんでした。';
+      td.style.textAlign = 'center';
+      td.style.color = 'var(--success)';
+      tr.appendChild(td);
+      errorTableBody.appendChild(tr);
+    } else {
+      for (let a of processedData.anomalies) {
+        const tr = document.createElement('tr');
+        
+        let badgeClass = '';
+        if (a.errType === 'minus') badgeClass = 'minus';
+        else if (a.errType === 'dup') badgeClass = 'dup';
+        else if (a.errType === 'rev') badgeClass = 'rev';
+
+        tr.innerHTML = `
+          <td>${escapeHtml(String(a.rowNum))}</td>
+          <td><strong>${escapeHtml(a.slipId)}</strong></td>
+          <td>${escapeHtml(a.datetime)}</td>
+          <td>${escapeHtml(a.sku)}</td>
+          <td>${escapeHtml(a.type)}</td>
+          <td>${escapeHtml(a.qty)}</td>
+          <td><span class="badge ${badgeClass}">${escapeHtml(a.errTypeDesc)}</span></td>
+          <td>${escapeHtml(a.desc)}</td>
+        `;
+        errorTableBody.appendChild(tr);
+      }
+    }
+
+    // 元帳テーブル描画
+    ledgerTableBody.innerHTML = '';
+    for (let l of processedData.ledger) {
+      const tr = document.createElement('tr');
+      const flagStr = l.flags.length > 0 ? l.flags.map(f => `<span class="badge ${f.includes('マイナス')?'minus':f.includes('重複')?'dup':'rev'}">${escapeHtml(f)}</span>`).join(' ') : '-';
+      
+      tr.innerHTML = `
+        <td>${escapeHtml(String(l.rowNum))}</td>
+        <td>${escapeHtml(l.slipId)}</td>
+        <td>${escapeHtml(l.datetime)}</td>
+        <td>${escapeHtml(l.sku)}</td>
+        <td>${escapeHtml(l.type)}</td>
+        <td>${escapeHtml(l.qty)}</td>
+        <td style="font-weight: bold; color: ${l.balanceAfter < 0 ? 'var(--danger)' : 'inherit'}">${escapeHtml(String(l.balanceAfter))}</td>
+        <td>${flagStr}</td>
+      `;
+      ledgerTableBody.appendChild(tr);
+    }
+
+    resultSection.style.display = 'block';
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/[&<>'"]/g, 
+      tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+    );
+  }
+
+  function exportCSV(filename, headers, rows) {
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(r => r.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))
+    ].join('\r\n');
+
+    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+})();
+</script>
+</body>
+</html>
