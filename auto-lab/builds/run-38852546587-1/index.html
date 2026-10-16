@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>設備点検記録チェッカー</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --warning: #d97706;
+      --warning-bg: #fffbeb;
+      --success: #16a34a;
+      --success-bg: #f0fdf4;
+      --border: #cbd5e1;
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 16px;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    header {
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin: 0 0 6px 0;
+      color: var(--text);
+    }
+    p.desc {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 768px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.85rem;
+      margin-bottom: 6px;
+    }
+    input[type="number"], textarea, input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.95rem;
+      background: #fff;
+    }
+    textarea {
+      font-family: monospace;
+      font-size: 0.85rem;
+      height: 140px;
+      resize: vertical;
+    }
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    button:hover { background: var(--primary-hover); }
+    button.secondary {
+      background: #e2e8f0;
+      color: var(--text);
+    }
+    button.secondary:hover { background: #cbd5e1; }
+    button.success {
+      background: var(--success);
+    }
+    button.success:hover { background: #15803d; }
+    .error-msg {
+      background: var(--danger-bg);
+      border: 1px solid #fca5a5;
+      color: var(--danger);
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      text-align: center;
+    }
+    .stat-card .num {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+    .stat-card.alert .num { color: var(--danger); }
+    .stat-card.warn .num { color: var(--warning); }
+    .stat-card.ok .num { color: var(--success); }
+    h2 {
+      font-size: 1.15rem;
+      margin: 0 0 12px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      margin-top: 8px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      text-align: left;
+    }
+    th {
+      background: #f1f5f9;
+      font-weight: 600;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 4px;
+    }
+    .badge-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid #fca5a5; }
+    .badge-warning { background: var(--warning-bg); color: var(--warning); border: 1px solid #fde68a; }
+    .badge-info { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .table-container {
+      overflow-x: auto;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .tab {
+      padding: 8px 16px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+    }
+    .tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .empty-state {
+      text-align: center;
+      padding: 30px;
+      color: var(--text-muted);
+    }
+    .note {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>設備点検記録チェッカー</h1>
+    <p class="desc">点検周期超過・記録重複・点検後異常未対応をブラウザ上で安全に検出します（完全ローカル動作）。</p>
+  </header>
+
+  <div id="errorBox" class="error-msg" style="display:none;"></div>
+
+  <div class="card">
+    <div class="grid-2">
+      <div>
+        <label for="csvFile">CSVファイル読み込み</label>
+        <input type="file" id="csvFile" accept=".csv, .txt">
+        <div class="note">UTF-8 / Shift-JIS対応</div>
+      </div>
+      <div>
+        <label for="inspectionDays">点検周期 (基準日数)</label>
+        <input type="number" id="inspectionDays" value="90" min="1">
+        <div class="note">この日数を超えて点検がない設備を「周期超過」と判定します。</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 16px;">
+      <label for="csvInput">または、CSVテキストを直接編集・貼り付け</label>
+      <textarea id="csvInput"></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button id="btnRun">点検データを分析・チェック</button>
+      <button id="btnSample" class="secondary">架空サンプルデータを読み込む</button>
+      <button id="btnClear" class="secondary">クリア</button>
+    </div>
+  </div>
+
+  <div id="resultSection" style="display:none;">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div>総レコード数</div>
+        <div class="num" id="statTotal">0</div>
+      </div>
+      <div class="stat-card alert">
+        <div>点検周期超過</div>
+        <div class="num" id="statOverdue">0</div>
+      </div>
+      <div class="stat-card warn">
+        <div>記録重複</div>
+        <div class="num" id="statDuplicate">0</div>
+      </div>
+      <div class="stat-card alert">
+        <div>異常未対応</div>
+        <div class="num" id="statUnresolved">0</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>
+        <span id="resultTitle">検出結果一覧</span>
+        <button id="btnExport" class="success" style="font-size:0.85rem; padding:6px 12px;">異常・重複データをCSV出力</button>
+      </h2>
+
+      <div class="tabs">
+        <div class="tab active" data-target="tabAll">すべて (<span id="cntAll">0</span>)</div>
+        <div class="tab" data-target="tabOverdue">周期超過 (<span id="cntOverdue">0</span>)</div>
+        <div class="tab" data-target="tabDuplicate">記録重複 (<span id="cntDuplicate">0</span>)</div>
+        <div class="tab" data-target="tabUnresolved">異常未対応 (<span id="cntUnresolved">0</span>)</div>
+      </div>
+
+      <div class="tab-content active" id="tabAll">
+        <div class="table-container" id="containerAll"></div>
+      </div>
+      <div class="tab-content" id="tabOverdue">
+        <div class="table-container" id="containerOverdue"></div>
+      </div>
+      <div class="tab-content" id="tabDuplicate">
+        <div class="table-container" id="containerDuplicate"></div>
+      </div>
+      <div class="tab-content" id="tabUnresolved">
+        <div class="table-container" id="containerUnresolved"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // 架空サンプルデータ
+  const sampleCSV = `設備ID,設備名,点検日,担当者,点検結果,備考
+EQ-001,第1プレス機,2023-10-01,佐藤,正常,定期点検実施
+EQ-001,第1プレス機,2023-10-01,佐藤,正常,重複入力テスト
+EQ-002,冷却水ポンプA,2023-05-15,鈴木,正常,前回点検が古い（周期超過テスト）
+EQ-003,受変電キュービクル,2023-11-10,高橋,異常,異音あり。部品交換手配中
+EQ-004,コンプレッサーB,2023-12-01,田中,正常,特になし
+EQ-004,コンプレッサーB,2024-01-15,田中,異常,圧力低下。未対応のまま放置
+EQ-005,フォークリフト01,2023-11-20,渡辺,正常,良好`;
+
+  let analysisResults = null;
+
+  // DOM要素
+  const csvInput = document.getElementById('csvInput');
+  const csvFile = document.getElementById('csvFile');
+  const inspectionDaysInput = document.getElementById('inspectionDays');
+  const btnRun = document.getElementById('btnRun');
+  const btnSample = document.getElementById('btnSample');
+  const btnClear = document.getElementById('btnClear');
+  const btnExport = document.getElementById('btnExport');
+  const errorBox = document.getElementById('errorBox');
+  const resultSection = document.getElementById('resultSection');
+
+  // イベント登録
+  btnRun.addEventListener('click', runAnalysis);
+  btnSample.addEventListener('click', () => {
+    csvInput.value = sampleCSV;
+    hideError();
+    runAnalysis();
+  });
+  btnClear.addEventListener('click', () => {
+    csvInput.value = '';
+    csvFile.value = '';
+    hideError();
+    resultSection.style.display = 'none';
+  });
+  btnExport.addEventListener('click', exportActionableCSV);
+
+  csvFile.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    // 簡易的にUTF-8で読み込み、失敗したらShift-JIS等を想定せずテキストとして読む
+    reader.onload = (evt) => {
+      csvInput.value = evt.target.result;
+      hideError();
+    };
+    reader.onerror = () => {
+      showError('ファイルの読み込みに失敗しました。');
+    };
+    reader.readAsText(file, 'UTF-8');
+  });
+
+  // タブ切り替え
+  const tabs = document.querySelectorAll('.tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      const targetId = tab.getAttribute('data-target');
+      document.getElementById(targetId).classList.add('active');
+    });
+  });
+
+  function showError(msg) {
+    errorBox.textContent = msg;
+    errorBox.style.display = 'block';
+    resultSection.style.display = 'none';
+  }
+
+  function hideError() {
+    errorBox.style.display = 'none';
+  }
+
+  // CSVパース関数（ダブルクォーテーション対応）
+  function parseCSV(text) {
+    const lines = text.split(/\r\n|\n/);
+    const rows = [];
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i].trim();
+      if (!line) continue;
+
+      let row = [];
+      let insideQuote = false;
+      let field = '';
+      for (let j = 0; j < line.length; j++) {
+        let char = line[j];
+        if (char === '"') {
+          if (insideQuote && line[j + '1'] === '"') {
+            field += '"';
+            j++;
+          } else {
+            insideQuote = !insideQuote;
+          }
+        } else if (char === ',' && !insideQuote) {
+          row.push(field.trim());
+          field = '';
+        } else {
+          field += char;
+        }
+      }
+      row.push(field.trim());
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  function runAnalysis() {
+    hideError();
+    const rawText = csvInput.value.trim();
+    if (!rawText) {
+      showError('CSVデータが入力されていません。');
+      return;
+    }
+
+    const maxIntervalDays = parseInt(inspectionDaysInput.value, 10);
+    if (isNaN(maxIntervalDays) || maxIntervalDays <= 0) {
+      showError('有効な点検周期（日数）を入力してください。');
+      return;
+    }
+
+    const rows = parseCSV(rawText);
+    if (rows.length < 2) {
+      showError('CSVの行数が不足しています（ヘッダー行＋1データ行以上必要です）。');
+      return;
+    }
+
+    const header = rows[0].map(h => h.replace(/^["']|["']$/g, ''));
+    
+    // 必須列の確認 (設備ID, 点検日, 点検結果 は必須)
+    const idIdx = header.findIndex(h => h.includes('設備ID') || h === 'ID' || h === '設備番号');
+    const dateIdx = header.findIndex(h => h.includes('点検日') || h.includes('日付'));
+    const resultIdx = header.findIndex(h => h.includes('点検結果') || h.includes('結果') || h.includes('判定'));
+    const nameIdx = header.findIndex(h => h.includes('設備名') || h.includes('名称'));
+    const workerIdx = header.findIndex(h => h.includes('担当者') || h.includes('点検者'));
+    const noteIdx = header.findIndex(h => h.includes('備考') || h.includes('メモ') || h.includes('内容'));
+
+    if (idIdx === -1 || dateIdx === -1 || resultIdx === -1) {
+      showError('CSVのヘッダーに必要な列（設備ID、点検日、点検結果）が見つかりません。');
+      return;
+    }
+
+    // 今日の日付 (基準日として現在日時を使用、または最新の点検日を基準にすることも可能だが、今回はブラウザの現在日時)
+    // 実務的に比較しやすいよう、入力データの中の最大日付を基準日とすることも選択肢だが、実運用に合わせて当日を基準にしつつ、
+    // サンプルデータの兼ね合いで動かせるよう工夫する。ここではブラウザのシステム日付（またはデータ内最大日付）を採用。
+    
+    const records = [];
+    const parseErrors = [];
+
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i];
+      if (r.length <= Math.max(idIdx, dateIdx, resultIdx)) {
+        continue; // 異常行スキップ
+      }
+      const eqId = r[idIdx] || '';
+      const dateStr = r[dateIdx] || '';
+      const resVal = r[resultIdx] || '';
+      const eqName = nameIdx !== -1 ? (r[nameIdx] || '') : '';
+      const worker = workerIdx !== -1 ? (r[workerIdx] || '') : '';
+      const note = noteIdx !== -1 ? (r[noteIdx] || '') : '';
+
+      if (!eqId) continue;
+
+      const dateObj = new Date(dateStr);
+      if (isNaN(dateObj.getTime())) {
+        parseErrors.push(`行 ${i+1}: 日付形式不正 ("${dateStr}")`);
+        continue;
+      }
+
+      records.push({
+        rowIndex: i + 1,
+        eqId,
+        eqName,
+        dateStr,
+        dateObj,
+        result: resVal,
+        worker,
+        note,
+        rawRow: r
+      });
+    }
+
+    if (records.length === 0) {
+      showError('有効な点検記録データが抽出できませんでした。' + (parseErrors.length ? ' (' + parseErrors[0] + ')' : ''));
+      return;
+    }
+
+    // 基準日の決定：データ中の最新日付、または今日。サンプルが過去日付なのでデータ内最大日付を基準日にすると判定しやすい
+    let maxTime = 0;
+    records.forEach(rec => {
+      if (rec.dateObj.getTime() > maxTime) maxTime = rec.dateObj.getTime();
+    });
+    const baseDate = newistDate(maxTime); // データ内最新日を基準日（本日相当）とする
+
+    // チェック処理
+    // 1. 記録重複チェック (同一設備IDかつ同一点検日)
+    const duplicateSet = new Set();
+    const duplicateRecords = [];
+    const seenMap = new Map();
+
+    records.forEach(rec => {
+      const key = `${rec.eqId}_${rec.dateStr}`;
+      if (seenMap.has(key)) {
+        // 重複検出
+        const original = seenMap.get(key);
+        if (!original._isDuplicateFlagged) {
+          original._isDuplicateFlagged = true;
+          original._flagType = '記録重複';
+          duplicateRecords.push(original);
+        }
+        rec._isDuplicateFlagged = true;
+        rec._flagType = '記録重複';
+        duplicateRecords.push(rec);
+      } else {
+        seenMap.set(key, rec);
+      }
+    });
+
+    // デバイスごとに時系列ソート
+    const eqMap = new Map();
+    records.forEach(rec => {
+      if (!eqMap.has(rec.eqId)) eqMap.set(rec.eqId, []);
+      eqMap.get(rec.eqId).push(rec);
+    });
+
+    eqMap.forEach((list, eqId) => {
+      list.sort((a, b) => a.dateObj - b.dateObj);
+    });
+
+    const overdueRecords = [];
+    const unresolvedRecords = [];
+
+    // 設備ごとの最新状況を評価
+    eqMap.forEach((list, eqId) => {
+      const latestRec = list[list.length - 1];
+      
+      // 2. 周期超過チェック (最後の点検日から基準日までが maxIntervalDays 超過)
+      const diffTime = baseDate.getTime() - latestRec.dateObj.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays > maxIntervalDays) {
+        latestRec._isOverdueFlagged = true;
+        latestRec._overdueDays = diffDays;
+        overdueRecords.push(latestRec);
+      }
+
+      // 3. 点検後の異常未対応チェック
+      // 各レコードを順に見て、"異常"があったあと、次に"正常"（または対応完了）の点検が来るまでに新しい点検がない、
+      // あるいは履歴の最後が「異常」のままで終わっている場合を未対応とみなす。
+      let hasUnresolvedAbnormal = false;
+      let lastAbnormalRec = null;
+
+      for (let i = 0; i < list.length; i++) {
+        const r = list[i];
+        const isAbnormal = r.result.includes('異常') || r.result.includes('不良') || r.result.includes('NG');
+        const isNormal = r.result.includes('正常') || r.result.includes('良') || r.result.includes('OK') || r.result.includes('完了');
+
+        if (isAbnormal) {
+          hasUnresolvedAbnormal = true;
+          lastAbnormalRec = r;
+        } else if (isNormal && hasUnresolvedAbnormal) {
+          // 異常のあとに正常点検が行われたため解決とみなす
+          hasUnresolvedAbnormal = false;
+          lastAbnormalRec = null;
+        }
+      }
+
+      if (hasUnresolvedAbnormal && lastAbnormalRec) {
+        if (!lastAbnormalRec._isUnresolvedFlagged) {
+          lastAbnormalRec._isUnresolvedFlagged = true;
+          unresolvedRecords.push(lastAbnormalRec);
+        }
+      }
+    });
+
+    // すべての異常・要対応レコードを統合（重複除去）
+    const allIssueMap = new Map();
+    [...duplicateRecords, ...overdueRecords, ...unresolvedRecords].forEach(r => {
+      allIssueMap.set(r.rowIndex, r);
+    });
+    const allIssues = Array.from(allIssueMap.values());
+
+    analysisResults = {
+      total: records.length,
+      baseDateStr: formatDate(baseDate),
+      records,
+      allIssues,
+      duplicateRecords,
+      overdueRecords,
+      unresolvedRecords
+    };
+
+    renderResults();
+  }
+
+  function newistDate(time) {
+    return new Date(time);
+  }
+
+  function formatDate(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function renderResults() {
+    if (!analysisResults) return;
+
+    document.getElementById('statTotal').textContent = analysisResults.total;
+    document.getElementById('statOverdue').textContent = analysisResults.overdueRecords.length;
+    document.getElementById('statDuplicate').textContent = analysisResults.duplicateRecords.length;
+    document.getElementById('statUnresolved').textContent = analysisResults.unresolvedRecords.length;
+
+    document.getElementById('cntAll').textContent = analysisResults.allIssues.length;
+    document.getElementById('cntOverdue').textContent = analysisResults.overdueRecords.length;
+    document.getElementById('cntDuplicate').textContent = analysisResults.duplicateRecords.length;
+    document.getElementById('cntUnresolved').textContent = analysisResults.unresolvedRecords.length;
+
+    renderTable('containerAll', analysisResults.allIssues);
+    renderTable('containerOverdue', analysisResults.overdueRecords);
+    renderTable('containerDuplicate', analysisResults.duplicateRecords);
+    renderTable('containerUnresolved', analysisResults.unresolvedRecords);
+
+    resultSection.style.display = 'block';
+  }
+
+  function renderTable(containerId, list) {
+    const container = document.getElementById(containerId);
+    if (list.length === 0) {
+      container.innerHTML = '<div class="empty-state">該当するデータはありません。</div>';
+      return;
+    }
+
+    let html = `<table>
+      <thead>
+        <tr>
+          <th>行</th>
+          <th>設備ID</th>
+          <th>設備名</th>
+          <th>点検日</th>
+          <th>点検結果</th>
+          <th>担当者</th>
+          <th>検出理由 / 備考</th>
+        </tr>
+      </thead>
+      <tbody>`;
+
+    list.forEach(r => {
+      let badges = '';
+      if (r._isDuplicateFlagged) badges += '<span class="badge badge-warning">重複</span> ';
+      if (r._isOverdueFlagged) badges += `<span class="badge badge-danger">周期超過(${r._overdueDays}日)</span> `;
+      if (r._isUnresolvedFlagged) badges += '<span class="badge badge-danger">異常未対応</span> ';
+
+      html += `<tr>
+        <td>${r.rowIndex}</td>
+        <td><strong>${escapeHtml(r.eqId)}</strong></td>
+        <td>${escapeHtml(r.eqName)}</td>
+        <td>${escapeHtml(r.dateStr)}</td>
+        <td>${escapeHtml(r.result)}</td>
+        <td>${escapeHtml(r.worker)}</td>
+        <td>${badges} ${escapeHtml(r.note)}</td>
+      </tr>`;
+    });
+
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function exportActionableCSV() {
+    if (!analysisResults || analysisResults.allIssues.length === 0) {
+      alert('出力するデータがありません。');
+      return;
+    }
+
+    let csvContent = '判定種別,行番号,設備ID,設備名,点検日,点検結果,担当者,備考\n';
+
+    analysisResults.allIssues.forEach(r => {
+      let types = [];
+      if (r._isDuplicateFlagged) types.push('記録重複');
+      if (r._isOverdueFlagged) types.push(`周期超過(${r._overdueDays}日)`);
+      if (r._isUnresolvedFlagged) types.push('異常未対応');
+
+      const rowData = [
+        types.join(' / '),
+        r.rowIndex,
+        r.eqId,
+        r.eqName,
+        r.dateStr,
+        r.result,
+        r.worker,
+        r.note
+      ];
+
+      const escaped = rowData.map(val => {
+        let v = String(val).replace(/"/g, '""');
+        return `"${v}"`;
+      });
+
+      csvContent += escaped.join(',') + '\n';
+    });
+
+    const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `inspection_issues_${formatDate(new Date())}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+})();
+</script>
+</body>
+</html>
