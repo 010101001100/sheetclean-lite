@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>時間割チェッカー（教室・先生の重複および移動時間不足検出）</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --warning: #d97706;
+      --warning-bg: #fffbeb;
+      --border: #cbd5e1;
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 16px;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    header {
+      margin-bottom: 24px;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin: 0 0 8px 0;
+    }
+    p.desc {
+      color: var(--text-muted);
+      margin: 0;
+      font-size: 0.9rem;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    h2 {
+      font-size: 1.1rem;
+      margin-top: 0;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .btn:hover { background: var(--primary-hover); }
+    .btn-secondary {
+      background: #e2e8f0;
+      color: var(--text);
+    }
+    .btn-secondary:hover { background: #cbd5e1; }
+    textarea {
+      width: 100%;
+      height: 120px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      resize: vertical;
+    }
+    .file-input-wrapper {
+      margin-bottom: 12px;
+    }
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+      font-size: 0.9rem;
+    }
+    .options-grid label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    input[type="number"] {
+      width: 60px;
+      padding: 4px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+    }
+    .controls {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    .error-box {
+      background: var(--danger-bg);
+      border: 1px solid #f87171;
+      color: var(--danger);
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 16px;
+      white-space: pre-wrap;
+      font-family: monospace;
+      font-size: 0.85rem;
+    }
+    .summary-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .stat-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      text-align: center;
+    }
+    .stat-card .val {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--primary);
+    }
+    .stat-card .val.alert {
+      color: var(--danger);
+    }
+    .stat-card .label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin-top: 8px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background: #f1f5f9;
+      font-weight: 600;
+    }
+    tr.conflict-row {
+      background: var(--danger-bg);
+    }
+    tr.warn-row {
+      background: var(--warning-bg);
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+    .badge-danger { background: var(--danger); color: white; }
+    .badge-warn { background: var(--warning); color: white; }
+    .tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .tab {
+      padding: 8px 16px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      border-bottom: none;
+      border-top-left-radius: 4px;
+      border-top-right-radius: 4px;
+      font-size: 0.9rem;
+      background: #e2e8f0;
+      color: var(--text-muted);
+    }
+    .tab.active {
+      background: white;
+      color: var(--text);
+      border-color: var(--border);
+      font-weight: 500;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .table-responsive {
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>時間割チェッカー</h1>
+    <p class="desc">複数ソースの授業時間割CSVを突き合わせ、教室・先生のダブルブッキングと移動余裕時間の不足を検出します。</p>
+  </header>
+
+  <div class="card">
+    <h2>1. 時間割CSVの入力</h2>
+    <p class="desc" style="margin-bottom: 12px;">
+      必要カラム: <code>source_name, day, start_time, end_time, subject, teacher, classroom</code><br>
+      時間形式は <code>HH:MM</code> (例: 09:00)。ダブルクォートで囲むCSVにも対応しています。
+    </p>
+
+    <div class="file-input-wrapper">
+      <button type="button" id="sampleBtn" class="btn btn-secondary">架空サンプルデータを読み込む</button>
+    </div>
+
+    <textarea id="csvInput" placeholder="source_name,day,start_time,end_time,subject,teacher,classroom
+中学部A,月,09:00,10:30,数学,山田太郎,101教室
+中学部B,月,10:00,11:30,英語,佐藤花子,102教室"></textarea>
+
+    <div class="options-grid">
+      <label>
+        移動必要余裕時間 (分):
+        <input type="number" id="bufferMinutes" value="10" min="0" max="120">
+      </label>
+    </div>
+
+    <div class="controls">
+      <button type="button" id="checkBtn" class="btn">重複・移動不足をチェック実行</button>
+      <button type="button" id="exportBtn" class="btn btn-secondary" disabled>結果をCSV形式で保存</button>
+    </div>
+  </div>
+
+  <div id="errorContainer" style="display: none;" class="error-box"></div>
+
+  <div id="resultsCard" class="card" style="display: none;">
+    <h2>チェック結果サマリー</h2>
+    <div class="summary-cards">
+      <div class="stat-card">
+        <div id="statTotal" class="val">0</div>
+        <div class="label">総授業数</div>
+      </div>
+      <div class="stat-card">
+        <div id="statDouble" class="val alert">0</div>
+        <div class="label">ダブルブッキング件数</div>
+      </div>
+      <div class="stat-card">
+        <div id="statTravel" class="val" style="color: var(--warning);">0</div>
+        <div class="label">移動余裕時間不足件数</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" data-target="tabDouble">ダブルブッキング一覧 (<span id="countDouble">0</span>)</div>
+      <div class="tab" data-target="tabTravel">移動余裕不足一覧 (<span id="countTravel">0</span>)</div>
+      <div class="tab" data-target="tabAll">全パース済み授業データ (<span id="countAll">0</span>)</div>
+    </div>
+
+    <div id="tabDouble" class="tab-content active">
+      <p class="desc">同一の時間帯に同じ「教室」または「先生」が重複して割り当てられている箇所です。</p>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>曜日</th>
+              <th>競合種別</th>
+              <th>競合対象</th>
+              <th>時間A</th>
+              <th>授業A (ソース / 教科 / 先生 / 教室)</th>
+              <th>時間B</th>
+              <th>授業B (ソース / 教科 / 先生 / 教室)</th>
+            </tr>
+          </thead>
+          <tbody id="doubleTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tabTravel" class="tab-content">
+      <p class="desc">同一の「先生」が連続して授業を行う際、設定した移動余裕時間（<span id="displayBuffer">10</span>分）を確保できていない箇所です。</p>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>曜日</th>
+              <th>先生名</th>
+              <th>前コマ終了</th>
+              <th>前コマ教室</th>
+              <th>次コマ開始</th>
+              <th>次コマ教室</th>
+              <th>間隔</th>
+              <th>不足状況</th>
+            </tr>
+          </thead>
+          <tbody id="travelTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tabAll" class="tab-content">
+      <p class="desc">読み込まれ、分単位に変換されたすべての授業データ一覧です。</p>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>ソース</th>
+              <th>曜日</th>
+              <th>開始</th>
+              <th>終了</th>
+              <th>教科</th>
+              <th>先生</th>
+              <th>教室</th>
+            </tr>
+          </thead>
+          <tbody id="allTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  const SAMPLE_CSV = `source_name,day,start_time,end_time,subject,teacher,classroom
+中学部A,月,09:00,10:30,数学,山田太郎,101教室
+中学部A,月,10:00,11:30,英語,佐藤花子,102教室
+中学部B,月,10:30,12:00,物理,山田太郎,201教室
+高校部,月,09:30,11:00,化学,鈴木一郎,101教室
+高校部,月,11:00,12:30,現代文,佐藤花子,103教室
+中学部A,火,13:00,14:30,歴史,高橋次郎,202教室
+中学部B,火,14:30,16:00,地理,高橋次郎,301教室`;
+
+  let lastExportRows = [];
+
+  const sampleBtn = document.getElementById('sampleBtn');
+  const checkBtn = document.getElementById('checkBtn');
+  const exportBtn = document.getElementById('exportBtn');
+  const csvInput = document.getElementById('csvInput');
+  const errorContainer = document.getElementById('errorContainer');
+  const resultsCard = document.getElementById('resultsCard');
+
+  sampleBtn.addEventListener('click', function() {
+    csvInput.value = SAMPLE_CSV;
+    clearError();
+  });
+
+  checkBtn.addEventListener('click', function() {
+    clearError();
+    try {
+      const rawText = csvInput.value;
+      const bufferMins = parseInt(document.getElementById('bufferMinutes').value, 10);
+      if (isNaN(bufferMins) || bufferMins < 0) {
+        throw new Error('移動必要余裕時間は0以上の数値を入力してください。');
+      }
+
+      const parsedLessons = parseCSV(rawText);
+      const analysis = analyzeSchedule(parsedLessons, bufferMins);
+
+      renderResults(analysis, parsedLessons, bufferMins);
+      resultsCard.style.display = 'block';
+      exportBtn.disabled = false;
+      lastExportRows = analysis.exportRows;
+
+    } catch (e) {
+      showError(e.message);
+      resultsCard.style.display = 'none';
+      exportBtn.disabled = true;
+    }
+  });
+
+  exportBtn.addEventListener('click', function() {
+    if (!lastExportRows || lastExportRows.length === 0) return;
+    let csvContent = "type,day,target,detail_a,detail_b,note\n";
+    lastExportRows.forEach(row => {
+      const escaped = row.map(cell => `"${String(cell).replace(/"/g, '""')}"`);
+      csvContent += escaped.join(",") + "\n";
+    });
+
+    const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'schedule_conflicts_report.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  // Tab switching logic
+  document.querySelectorAll('.tabs').forEach(tabsEl => {
+    tabsEl.addEventListener('click', function(e) {
+      if (!e.target.classList.contains('tab')) return;
+      const targetId = e.target.getAttribute('data-target');
+      
+      tabsEl.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      e.target.classList.add('active');
+
+      const card = tabsEl.closest('.card');
+      card.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+      card.querySelector('#' + targetId).classList.add('active');
+    });
+  });
+
+  function showError(msg) {
+    errorContainer.textContent = "エラー:\n" + msg;
+    errorContainer.style.display = 'block';
+  }
+
+  function clearError() {
+    errorContainer.textContent = '';
+    errorContainer.style.display = 'none';
+  }
+
+  // Robust CSV parser supporting quotes and commas
+  function parseCSV(text) {
+    const lines = text.split(/\r\n|\n/);
+    const rows = [];
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      
+      const row = [];
+      let insideQuote = false;
+      let entry = '';
+      for (let c = 0; c < line.length; c++) {
+        const char = line[c];
+        if (char === '"') {
+          if (insideQuote && line[c + '"'] === '"') {
+            entry += '"';
+            c++;
+          } else {
+            insideQuote = !insideQuote;
+          }
+        } else if (char === ',' && !insideQuote) {
+          row.push(entry.trim());
+          entry = '';
+        } else {
+          entry += char;
+        }
+      }
+      row.push(entry.trim());
+      rows.push({ lineNum: i + 1, row });
+    }
+
+    if (rows.length === 0) {
+      throw new Error('CSVデータが空です。');
+    }
+
+    const header = rows[0].row.map(h => h.toLowerCase());
+    const required = ['source_name', 'day', 'start_time', 'end_time', 'subject', 'teacher', 'classroom'];
+    
+    const indices = {};
+    required.forEach(req => {
+      const idx = header.indexOf(req);
+      if (idx === -1) {
+        throw new Error(`必須カラム "${req}" が見つかりません。\nヘッダー行を確認してください: ${header.join(', ')}`);
+      }
+      indices[req] = idx;
+    });
+
+    const parsedLessons = [];
+    for (let i = 1; i < rows.length; i++) {
+      const { lineNum, row } = rows[i];
+      const source_name = row[indices['source_name']] || '';
+      const day = row[indices['day']] || '';
+      const start_time_str = row[indices['start_time']] || '';
+      const end_time_str = row[indices['end_time']] || '';
+      const subject = row[indices['subject']] || '';
+      const teacher = row[indices['teacher']] || '';
+      const classroom = row[indices['classroom']] || '';
+
+      if (!source_name && !day && !start_time_str) continue; // skip blank rows
+
+      const startMin = timeToMinutes(start_time_str, lineNum);
+      const endMin = timeToMinutes(end_time_str, lineNum);
+
+      if (startMin >= endMin) {
+        throw new Error(`行 ${lineNum}: 終了時刻 (${end_time_str}) は開始時刻 (${start_time_str}) より後である必要があります。`);
+      }
+
+      parsedLessons.push({
+        id: i,
+        lineNum,
+        source_name,
+        day,
+        start_time_str,
+        end_time_str,
+        startMin,
+        endMin,
+        subject,
+        teacher,
+        classroom
+      });
+    }
+
+    if (parsedLessons.length === 0) {
+      throw new Error('有効な授業データが見つかりませんでした。');
+    }
+
+    return parsedLessons;
+  }
+
+  function timeToMinutes(timeStr, lineNum) {
+    if (!timeStr || !timeStr.includes(':')) {
+      throw new Error(`行 ${lineNum}: 時刻形式が不正です ("${timeStr}")。HH:MM形式で指定してください。`);
+    }
+    const parts = timeStr.split(':');
+    const h = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10);
+    if (isNaN(h) || isNaN(m) || h < 0 || h > 23 || m < 0 || m > 59) {
+      throw new Error(`行 ${lineNum}: 無効な時刻値です ("${timeStr}")。`);
+    }
+    return h * 60 + m;
+  }
+
+  function minutesToTime(mins) {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+  }
+
+  function analyzeSchedule(lessons, bufferMins) {
+    const doubleConflicts = [];
+    const travelIssues = [];
+    const exportRows = [];
+
+    // Group by day
+    const byDay = {};
+    lessons.forEach(l => {
+      if (!byDay[l.day]) byDay[l.day] = [];
+      byDay[l.day].push(l);
+    });
+
+    for (const day in byDay) {
+      const dayLessons = byDay[day];
+
+      // 1. Double Booking Check (Classroom & Teacher)
+      for (let i = 0; i < dayLessons.length; i++) {
+        for (let j = i + 1; j < dayLessons.length; j++) {
+          const a = dayLessons[i];
+          const b = dayLessons[j];
+
+          // Check overlap: max(startA, startB) < min(endA, endB)
+          const overlapStart = Math.max(a.startMin, b.startMin);
+          const overlapEnd = Math.min(a.endMin, b.endMin);
+
+          if (overlapStart < overlapEnd) {
+            // Check Classroom conflict
+            if (a.classroom && b.classroom && a.classroom === b.classroom) {
+              doubleConflicts.push({
+                day,
+                type: '教室重複',
+                target: a.classroom,
+                a, b
+              });
+              exportRows.push(['教室重複', day, a.classroom, `${a.source_name}: ${a.subject}(${a.teacher})`, `${b.source_name}: ${b.subject}(${b.teacher})`, `${minutesToTime(overlapStart)}-${minutesToTime(overlapEnd)}で重複`]);
+            }
+
+            // Check Teacher conflict
+            if (a.teacher && b.teacher && a.teacher === b.teacher) {
+              doubleConflicts.push({
+                day,
+                type: '先生重複',
+                target: a.teacher,
+                a, b
+              });
+              exportRows.push(['先生重複', day, a.teacher, `${a.source_name}: ${a.subject}@${a.classroom}`, `${b.source_name}: ${b.subject}@${b.classroom}`, `${minutesToTime(overlapStart)}-${minutesToTime(overlapEnd)}で重複`]);
+            }
+          }
+        }
+      }
+
+      // 2. Travel Time Insufficiency Check per Teacher
+      const teacherLessons = {};
+      dayLessons.forEach(l => {
+        if (!l.teacher) return;
+        if (!teacherLessons[l.teacher]) teacherLessons[l.teacher] = [];
+        teacherLessons[l.teacher].push(l);
+      });
+
+      for (const teacher in teacherLessons) {
+        const tList = teacherLessons[teacher];
+        // Sort by start time
+        tList.sort((x, y) => x.startMin - y.startMin);
+
+        for (let i = 0; i < tList.length - 1; i++) {
+          const prev = tList[i];
+          const next = tList[i + 1];
+
+          // Only check consecutive or overlapping/close assignments
+          // If prev ends before next starts, check gap
+          if (prev.endMin <= next.startMin) {
+            const gap = next.startMin - prev.endMin;
+            // If different classrooms and gap < buffer
+            if (prev.classroom !== next.classroom && gap < bufferMins) {
+              travelIssues.push({
+                day,
+                teacher,
+                prev,
+                next,
+                gap,
+                bufferMins
+              });
+              exportRows.push(['移動時間不足', day, teacher, `前:${prev.subject}(${prev.classroom} ${prev.end_time_str})`, `次:${next.subject}(${next.classroom} ${next.start_time_str})`, `間隔${gap}分 (必要:${bufferMins}分)`]);
+            }
+          }
+        }
+      }
+    }
+
+    return {
+      doubleConflicts,
+      travelIssues,
+      exportRows
+    };
+  }
+
+  function renderResults(analysis, lessons, bufferMins) {
+    document.getElementById('statTotal').textContent = lessons.length;
+    document.getElementById('statDouble').textContent = analysis.doubleConflicts.length;
+    document.getElementById('statTravel').textContent = analysis.travelIssues.length;
+
+    document.getElementById('countDouble').textContent = analysis.doubleConflicts.length;
+    document.getElementById('countTravel').textContent = analysis.travelIssues.length;
+    document.getElementById('countAll').textContent = lessons.length;
+    document.getElementById('displayBuffer').textContent = bufferMins;
+
+    // Render Double Booking Table
+    const doubleBody = document.getElementById('doubleTableBody');
+    doubleBody.innerHTML = '';
+    if (analysis.doubleConflicts.length === 0) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td colspan="7" style="text-align: center; color: var(--text-muted);">ダブルブッキングは検出されませんでした。</td>`;
+      doubleBody.appendChild(tr);
+    } else {
+      analysis.doubleConflicts.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.className = 'conflict-row';
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(item.day)}</strong></td>
+          <td><span class="badge badge-danger">${escapeHtml(item.type)}</span></td>
+          <td><strong>${escapeHtml(item.target)}</strong></td>
+          <td>${escapeHtml(item.a.start_time_str)} - ${escapeHtml(item.a.end_time_str)}</td>
+          <td>[${escapeHtml(item.a.source_name)}] ${escapeHtml(item.a.subject)} / ${escapeHtml(item.a.teacher)} / ${escapeHtml(item.a.classroom)}</td>
+          <td>${escapeHtml(item.b.start_time_str)} - ${escapeHtml(item.b.end_time_str)}</td>
+          <td>[${escapeHtml(item.b.source_name)}] ${escapeHtml(item.b.subject)} / ${escapeHtml(item.b.teacher)} / ${escapeHtml(item.b.classroom)}</td>
+        `;
+        doubleBody.appendChild(tr);
+      });
+    }
+
+    // Render Travel Issues Table
+    const travelBody = document.getElementById('travelTableBody');
+    travelBody.innerHTML = '';
+    if (analysis.travelIssues.length === 0) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td colspan="8" style="text-align: center; color: var(--text-muted);">移動余裕時間の不足は検出されませんでした。</td>`;
+      travelBody.appendChild(tr);
+    } else {
+      analysis.travelIssues.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.className = 'warn-row';
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(item.day)}</strong></td>
+          <td><strong>${escapeHtml(item.teacher)}</strong></td>
+          <td>${escapeHtml(item.prev.end_time_str)}</td>
+          <td>${escapeHtml(item.prev.classroom)} (${escapeHtml(item.prev.subject)})</td>
+          <td>${escapeHtml(item.next.start_time_str)}</td>
+          <td>${escapeHtml(item.next.classroom)} (${escapeHtml(item.next.subject)})</td>
+          <td><strong>${item.gap}分</strong></td>
+          <td><span class="badge badge-warn">${item.bufferMins}分必要 (不足 ${item.bufferMins - item.gap}分)</span></td>
+        `;
+        travelBody.appendChild(tr);
+      });
+    }
+
+    // Render All Lessons Table
+    const allBody = document.getElementById('allTableBody');
+    allBody.innerHTML = '';
+    lessons.forEach(l => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${escapeHtml(l.source_name)}</td>
+        <td>${escapeHtml(l.day)}</td>
+        <td>${escapeHtml(l.start_time_str)}</td>
+        <td>${escapeHtml(l.end_time_str)}</td>
+        <td>${escapeHtml(l.subject)}</td>
+        <td>${escapeHtml(l.teacher)}</td>
+        <td>${escapeHtml(l.classroom)}</td>
+      `;
+      allBody.appendChild(tr);
+    });
+  }
+
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+})();
+</script>
+
+</body>
+</html>
