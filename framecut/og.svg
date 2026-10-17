@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<defs><linearGradient id="b" x2="1" y2="1"><stop stop-color="#100f14"/><stop offset="1" stop-color="#3e1c1a"/></linearGradient><linearGradient id="p" x2="0" y2="1"><stop stop-color="#51304b"/><stop offset=".52" stop-color="#e28b63"/><stop offset="1" stop-color="#201322"/></linearGradient></defs>
+<rect width="1200" height="630" fill="url(#b)"/>
+<g font-family="'Noto Sans JP',sans-serif" font-weight="900"><rect x="60" y="70" width="195" height="40" rx="20" fill="#5f3026"/><text x="80" y="97" fill="#ffb69f" font-size="18">FREE / NO SIGNUP</text><text x="60" y="235" fill="#fff7ed" font-size="78">その写真、</text><text x="60" y="339" fill="#ff7655" font-size="77">映画にしよう。</text><text x="65" y="427" fill="#dcd6d0" font-size="31">写真1枚からつくれる</text><text x="65" y="480" fill="#dcd6d0" font-size="31">ショート映画予告編。</text><text x="65" y="563" fill="#ff8f73" font-size="31">▶ FRAMECUT</text></g>
+<rect x="785" y="53" width="340" height="535" rx="28" fill="#08080a" stroke="#70514a" stroke-width="5"/>
+<rect x="811" y="80" width="288" height="477" rx="12" fill="url(#p)"/><circle cx="970" cy="245" r="90" fill="#f9c49a" opacity=".58"/><path d="M811 393 849 377 879 398 923 338 969 389 1017 361 1099 407V558H811Z" fill="#1d1c30"/>
+<g font-family="'Noto Sans JP',sans-serif" font-weight="900" text-anchor="middle"><text x="955" y="455" fill="#fff7ed" font-size="37">あの夏の記憶</text><text x="955" y="515" fill="#ffe3cc" font-size="17">A FILM BY YOU</text></g>
+</svg>
